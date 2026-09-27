@@ -71,7 +71,7 @@ it("shows recent changes, usage, and inactive people", async () => {
   await page.close();
 });
 
-it("marks components changed since the last visit in the sidebar", async () => {
+it("marks components changed in the last week in the sidebar", async () => {
   const page = await browser.newPage();
   await page.goto(`http://localhost:${PORT}/?path=/story/scenarios-card--default`);
   const dot = page.getByTestId("changed-dot").first();
@@ -82,7 +82,7 @@ it("marks components changed since the last visit in the sidebar", async () => {
   const tooltip = page.getByRole("tooltip");
   await tooltip.waitFor();
   expect(await tooltip.textContent()).toBe(
-    "New since your last visit. Dana Whitfield changed it 4 days ago: Handle long labels in Badge",
+    "Changed 4 days ago by Dana Whitfield: Handle long labels in Badge",
   );
 
   await page.close();

@@ -15,14 +15,12 @@ import {
 } from "./shared";
 
 const PANEL_ID = `${ADDON_ID}/panel`;
-const LAST_VISIT_KEY = `${ADDON_ID}/last-visit`;
 const DAY_MS = 24 * 60 * 60 * 1000;
+const RECENTLY_CHANGED_DAYS = 7;
 const LANE_DAYS = 730;
 const LANE_WIDTH = 200;
 
 const data = readContributorsData();
-const lastVisit = Number(localStorage.getItem(LAST_VISIT_KEY)) || Date.now() - 7 * DAY_MS;
-localStorage.setItem(LAST_VISIT_KEY, String(Date.now()));
 
 addons.register(ADDON_ID, (api) => {
   addons.add(PANEL_ID, {
@@ -50,9 +48,14 @@ function sidebarLabel(item: any, api: API) {
   const firstEntry = api.getData(item.children[0]) as { importPath?: string } | undefined;
   const [latestChange] =
     (firstEntry?.importPath && data?.components[firstEntry.importPath]?.recentChanges) || [];
-  if (!latestChange || Date.parse(latestChange.date) <= lastVisit) return undefined;
+  if (
+    !latestChange ||
+    Date.now() - Date.parse(latestChange.date) > RECENTLY_CHANGED_DAYS * DAY_MS
+  ) {
+    return undefined;
+  }
 
-  const note = `New since your last visit. ${latestChange.author} changed it ${timeAgo(latestChange.date)}: ${latestChange.message}`;
+  const note = `Changed ${timeAgo(latestChange.date)} by ${latestChange.author}: ${latestChange.message}`;
   return (
     <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
       {item.name}
