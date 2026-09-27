@@ -9,8 +9,6 @@ import { test } from "vitest";
 import { collectContributors } from "../src/preset";
 import { EXAMPLE_DIR, storyImportPath } from "../tests/shared";
 
-if (!process.env.ANTHROPIC_API_KEY) throw new Error("Set ANTHROPIC_API_KEY to run the evals.");
-
 export const MODEL = process.env.EVAL_MODEL ?? "claude-sonnet-5";
 const TRIAL_COUNT = Number(process.env.EVAL_TRIALS ?? 3);
 export const trials = Array.from({ length: TRIAL_COUNT }, (_, index) => index + 1);
