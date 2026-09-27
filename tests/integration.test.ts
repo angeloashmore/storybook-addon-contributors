@@ -1,38 +1,56 @@
-// Generate the fixture, run the addon's collector on Storybook's real story
-// index, and compare with example/expected.json.
+import { execFileSync } from "node:child_process";
+import { buildIndex } from "storybook/internal/core-server";
+import { beforeAll, expect, it } from "vitest";
 
-import { execFileSync } from 'node:child_process';
-import { buildIndex } from 'storybook/internal/core-server';
-import { beforeAll, expect, it } from 'vitest';
-
-import { collectContributors, type ContributorsData } from '../packages/addon/preset';
-import { EXAMPLE, expectRanking, scenarios } from './shared';
+import { collectContributors, type ContributorsData } from "../src/preset";
+import { EXAMPLE_DIR, expectRanking, scenarios, storyImportPath } from "./shared";
 
 let entries: Record<string, any>;
 let data: ContributorsData;
 
 beforeAll(async () => {
-  execFileSync('node', [`${EXAMPLE}scripts/generate-fixture.mjs`]);
-  process.chdir(EXAMPLE);
-  entries = (await buildIndex({ configDir: `${EXAMPLE}.storybook` } as any)).entries;
+  execFileSync("node", [`${EXAMPLE_DIR}scripts/generate-fixture.mjs`]);
+  process.chdir(EXAMPLE_DIR);
+  const index = await buildIndex({ configDir: `${EXAMPLE_DIR}.storybook` } as any);
+  entries = index.entries;
   data = collectContributors(entries);
 });
 
-const ranked = (d: ContributorsData, c: string) => d.components[`./fixture/src/${c}/${c}.stories.tsx`].contributors.map((p) => p.name);
+function rankedNames(contributorsData: ContributorsData, component: string): string[] {
+  return contributorsData.components[storyImportPath(component)].contributors.map(
+    (contributor) => contributor.name,
+  );
+}
 
-it.each(scenarios)('$component ($scenario)', (s) => expectRanking(ranked(data, s.component), s));
-
-it('uses componentPath, or the story folder without it', () => {
-  expect(data.components['./fixture/src/Button/Button.stories.tsx'].files).toEqual(['fixture/src/Button/Button.tsx']);
-  const fallback = collectContributors(Object.fromEntries(Object.entries(entries).map(([k, { componentPath, ...e }]) => [k, e])));
-  expect(fallback.components['./fixture/src/Button/Button.stories.tsx'].files).toEqual(['fixture/src/Button']);
-  for (const s of scenarios) expectRanking(ranked(fallback, s.component), s);
-  expect(JSON.stringify(fallback)).not.toContain('Quinn Harper');
+it.each(scenarios)("$component ($scenario)", (scenario) => {
+  expectRanking(rankedNames(data, scenario.component), scenario);
 });
 
-it('skips bots and merge commits, and never includes emails', () => {
+it("uses the component file from the story index", () => {
+  expect(data.components[storyImportPath("Button")].files).toEqual([
+    "fixture/src/Button/Button.tsx",
+  ]);
+});
+
+it("falls back to the story folder, excluding story files", () => {
+  const entriesWithoutComponentPath = Object.fromEntries(
+    Object.entries(entries).map(([id, entry]) => [id, { ...entry, componentPath: undefined }]),
+  );
+  const fallback = collectContributors(entriesWithoutComponentPath);
+
+  expect(fallback.components[storyImportPath("Button")].files).toEqual(["fixture/src/Button"]);
+  for (const scenario of scenarios)
+    expectRanking(rankedNames(fallback, scenario.component), scenario);
+  expect(JSON.stringify(fallback)).not.toContain("Quinn Harper");
+});
+
+it("skips bots, merge commits, and story-only edits", () => {
   const json = JSON.stringify(data);
-  expect(json).not.toMatch(/\[bot\]|Ivan Petrov|@/);
-  expect(json).not.toContain('Quinn Harper'); // story-only edits
+  expect(json).not.toContain("[bot]");
+  expect(json).not.toContain("Ivan Petrov");
+  expect(json).not.toContain("Quinn Harper");
 });
 
+it("never includes email addresses", () => {
+  expect(JSON.stringify(data)).not.toContain("@");
+});

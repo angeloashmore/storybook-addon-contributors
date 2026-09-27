@@ -1,31 +1,37 @@
-// Build the example Storybook statically, open each scenario in Chromium, open
-// the Contributors panel, and check the names and their order.
+import { execFileSync } from "node:child_process";
+import { readdirSync, readFileSync } from "node:fs";
+import { createServer } from "node:http";
+import { join } from "node:path";
+import { chromium, type Browser } from "playwright";
+import { afterAll, beforeAll, expect, it } from "vitest";
 
-import { execFileSync } from 'node:child_process';
-import { readFileSync, readdirSync } from 'node:fs';
-import { createServer } from 'node:http';
-import { join } from 'node:path';
-import { chromium, type Browser } from 'playwright';
-import { afterAll, beforeAll, expect, it } from 'vitest';
+import { EXAMPLE_DIR, expectRanking, scenarios } from "./shared";
 
-import { EXAMPLE, expectRanking, scenarios } from './shared';
+const STATIC_DIR = `${EXAMPLE_DIR}storybook-static`;
+const PORT = 6199;
 
-const OUT = `${EXAMPLE}storybook-static`;
-const server = createServer((req, res) => {
-  const path = join(OUT, new URL(req.url!, 'http://x').pathname.replace(/\/$/, '/index.html'));
+const server = createServer((request, response) => {
+  const pathname = new URL(request.url!, "http://localhost").pathname.replace(/\/$/, "/index.html");
+  const file = join(STATIC_DIR, pathname);
   try {
-    res.setHeader('content-type', path.endsWith('.js') ? 'text/javascript' : path.endsWith('.html') ? 'text/html' : '');
-    res.end(readFileSync(path));
+    const contentType = file.endsWith(".js")
+      ? "text/javascript"
+      : file.endsWith(".html")
+        ? "text/html"
+        : "";
+    response.setHeader("content-type", contentType);
+    response.end(readFileSync(file));
   } catch {
-    res.writeHead(404).end();
+    response.writeHead(404).end();
   }
 });
+
 let browser: Browser;
 
 beforeAll(async () => {
-  execFileSync('npm', ['run', 'build'], { cwd: `${EXAMPLE}..`, stdio: 'ignore' }); // also regenerates the fixture
-  await new Promise<void>((r) => server.listen(6199, r));
-  browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH }); // optional preinstalled Chromium
+  execFileSync("npm", ["run", "build-storybook"], { cwd: `${EXAMPLE_DIR}..`, stdio: "ignore" });
+  await new Promise<void>((resolve) => server.listen(PORT, resolve));
+  browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH });
 });
 
 afterAll(async () => {
@@ -33,20 +39,32 @@ afterAll(async () => {
   server.close();
 });
 
-it.each(scenarios)('panel for $component ($scenario)', async (s) => {
+it.each(scenarios)("panel for $component ($scenario)", async (scenario) => {
   const page = await browser.newPage();
-  await page.goto(`http://localhost:6199/?path=/story/${s.storyId}`);
-  await page.getByRole('tab', { name: 'Contributors' }).click();
-  await page.getByTestId('contributor-name').first().waitFor();
-  expectRanking(await page.getByTestId('contributor-name').allTextContents(), s);
+  await page.goto(`http://localhost:${PORT}/?path=/story/${scenario.storyId}`);
+  await page.getByRole("tab", { name: "Contributors" }).click();
+
+  const names = page.getByTestId("contributor-name");
+  await names.first().waitFor();
+  expectRanking(await names.allTextContents(), scenario);
+
   await page.close();
 });
 
-it('built output contains no author emails', () => {
-  const emails = new Set(execFileSync('git', ['log', '--format=%ae'], { cwd: `${EXAMPLE}fixture`, encoding: 'utf8' }).split('\n').filter(Boolean));
+it("built output contains no author emails", () => {
+  const log = execFileSync("git", ["log", "--format=%ae"], {
+    cwd: `${EXAMPLE_DIR}fixture`,
+    encoding: "utf8",
+  });
+  const emails = new Set(log.split("\n").filter(Boolean));
   expect(emails.size).toBeGreaterThan(5);
-  for (const file of readdirSync(OUT, { recursive: true, withFileTypes: true }).filter((f) => f.isFile())) {
-    const text = readFileSync(join(file.parentPath, file.name), 'utf8');
-    for (const email of emails) expect(text.includes(email), `${email} in ${file.name}`).toBe(false);
+
+  const files = readdirSync(STATIC_DIR, { recursive: true, withFileTypes: true }).filter((entry) =>
+    entry.isFile(),
+  );
+  for (const file of files) {
+    const text = readFileSync(join(file.parentPath, file.name), "utf8");
+    for (const email of emails)
+      expect(text.includes(email), `${email} in ${file.name}`).toBe(false);
   }
 });

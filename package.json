@@ -1,25 +1,56 @@
 {
-  "private": true,
+  "name": "storybook-addon-component-contributors",
+  "version": "0.0.0",
+  "description": "Find the right person to talk to about a component without leaving Storybook",
+  "keywords": [
+    "contributors",
+    "git",
+    "storybook-addon"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/angeloashmore/storybook-addon-component-contributors.git"
+  },
+  "files": [
+    "src"
+  ],
   "type": "module",
+  "exports": {
+    ".": "./src/preset.ts",
+    "./preset": "./src/preset.ts",
+    "./manager": "./src/manager.tsx"
+  },
   "scripts": {
     "fixture": "node example/scripts/generate-fixture.mjs",
-    "dev": "npm run fixture && npm exec -w example -- storybook dev -p 6006",
-    "build": "npm run fixture && npm exec -w example -- storybook build -o storybook-static",
-    "test": "vitest run",
-    "typecheck": "tsc",
-    "evals": "vitest run --project evals --reporter=default --reporter=./evals/reporter.ts"
+    "storybook": "npm run fixture && cd example && storybook dev -p 6006",
+    "build-storybook": "npm run fixture && cd example && storybook build -o storybook-static",
+    "format": "oxfmt",
+    "lint": "oxlint --deny-warnings",
+    "types": "tsc",
+    "unit": "vitest run --project tests",
+    "evals": "vitest run --project evals --reporter=default --reporter=./evals/reporter.ts",
+    "test": "npm run lint && npm run types && npm run unit"
   },
   "devDependencies": {
     "@anthropic-ai/claude-agent-sdk": "^0.3.283",
+    "@storybook/react-vite": "10.6.0",
     "@types/node": "^22",
     "@types/react": "^19.3.0",
+    "oxfmt": "^0.70.0",
+    "oxlint": "1.85.0",
     "playwright": "1.56.1",
+    "react": "^19",
+    "react-dom": "^19",
     "storybook": "10.6.0",
     "typescript": "^5.9.3",
-    "vitest": "^5.0.2"
+    "vite": "^7.0.0",
+    "vitest": "5.0.2"
   },
-  "workspaces": [
-    "packages/*",
-    "example"
-  ]
+  "peerDependencies": {
+    "storybook": "^10.0.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
 }

@@ -1,0 +1,51 @@
+name: publish
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  release:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+    steps:
+      - uses: googleapis/release-please-action@v5
+        id: release
+        with:
+          release-type: node
+      - uses: actions/checkout@v7
+        if: steps.release.outputs.release_created == 'true'
+      - uses: actions/setup-node@v7
+        if: steps.release.outputs.release_created == 'true'
+        with:
+          node-version: 26
+          registry-url: "https://registry.npmjs.org"
+      - run: npm publish
+        if: steps.release.outputs.release_created == 'true'
+
+  prerelease:
+    needs: [release]
+    if: "!cancelled() && needs.release.outputs.release_created != 'true'"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      TAG: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.number) || 'canary' }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 26
+          registry-url: "https://registry.npmjs.org"
+      - run: |
+          VERSION=$(jq -r .version package.json)
+          npm version "$VERSION-$TAG.$(git rev-parse --short HEAD)" --no-git-tag-version
+          npm publish --tag "$TAG"

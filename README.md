@@ -7,8 +7,6 @@ relevant first. Use it to find someone to ask a question, request a review from,
 from. You don't need git or any accounts: recent work counts most, and the list comes from your
 repository's history when Storybook is built.
 
-![The Contributors panel under a story in Storybook, listing three people with how often and how recently each worked on the component](docs/screenshot.png)
-
 ## Install
 
 Requires Storybook 10.
@@ -20,39 +18,19 @@ npm install --save-dev storybook-addon-component-contributors
 ```ts
 // .storybook/main.ts
 export default {
-  addons: ['storybook-addon-component-contributors'],
+  addons: ["storybook-addon-component-contributors"],
 };
 ```
 
 ## Deploying
 
-The contributor list is built into Storybook when you build it, so the deployed site doesn't need
-the repository. The build does need the full git history. Many CI systems fetch only the latest
-commits by default, which leaves the panel showing only recent contributors.
-
-**GitHub Actions**
-
-```yaml
-- uses: actions/checkout@v4
-  with:
-    fetch-depth: 0 # full history
-- run: npm ci
-- run: npx storybook build
-```
-
-**GitLab CI**
-
-```yaml
-build-storybook:
-  variables:
-    GIT_DEPTH: 0 # full history
-  script:
-    - npm ci
-    - npx storybook build
-```
-
-**Any other CI or host:** fetch the full history before building.
+The list is built from your git history when Storybook builds, so the deployed site doesn't need the
+repository. Most hosts clone only recent commits, which would leave out older contributors, so fetch
+the full history in your build command:
 
 ```sh
-git fetch --unshallow || true; npx storybook build
+git fetch --unshallow || true && npm run build-storybook
 ```
+
+On Vercel, set the environment variable `VERCEL_DEEP_CLONE=true` instead. On GitHub Actions (for
+example, when publishing to Chromatic or GitHub Pages), set `fetch-depth: 0` on `actions/checkout`.
