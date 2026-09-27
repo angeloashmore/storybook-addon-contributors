@@ -61,7 +61,7 @@ export async function managerHead(head = "", options: any) {
   const { entries } = await storyIndexGenerator.getIndex();
   const json = JSON.stringify(collectContributors(entries));
   const escapedForScriptTag = json.replaceAll("<", "\\u003c");
-  return `${head}\n<script>window.__COMPONENT_CONTRIBUTORS__ = ${escapedForScriptTag};</script>\n`;
+  return `${head}\n<script>window.__STORYBOOK_ADDON_CONTRIBUTORS__ = ${escapedForScriptTag};</script>\n`;
 }
 
 function componentPathspec(entry: StoryIndexEntry): string[] {

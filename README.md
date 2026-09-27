@@ -1,4 +1,4 @@
-# Component Contributors
+# storybook-addon-contributors
 
 Find the right person to talk to about a component without leaving Storybook.
 
@@ -12,13 +12,13 @@ repository's history when Storybook is built.
 Requires Storybook 10.
 
 ```sh
-npm install --save-dev storybook-addon-component-contributors
+npm install --save-dev storybook-addon-contributors
 ```
 
 ```ts
 // .storybook/main.ts
 export default {
-  addons: ["storybook-addon-component-contributors"],
+  addons: ["storybook-addon-contributors"],
 };
 ```
 

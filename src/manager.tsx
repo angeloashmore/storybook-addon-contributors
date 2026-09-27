@@ -7,8 +7,8 @@ import type { Contributor, ContributorsData } from "./preset";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-addons.register("component-contributors", () => {
-  addons.add("component-contributors/panel", {
+addons.register("storybook-addon-contributors", () => {
+  addons.add("storybook-addon-contributors/panel", {
     type: types.PANEL,
     title: "Contributors",
     match: ({ viewMode }) => viewMode === "story",
@@ -22,7 +22,7 @@ addons.register("component-contributors", () => {
 
 function Panel() {
   const { storyId, index } = useStorybookState();
-  const data: ContributorsData | undefined = (window as any).__COMPONENT_CONTRIBUTORS__;
+  const data: ContributorsData | undefined = (window as any).__STORYBOOK_ADDON_CONTRIBUTORS__;
   const story = index?.[storyId] as { importPath: string; title: string } | undefined;
   const contributors = story && data?.components[story.importPath]?.contributors;
 

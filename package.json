@@ -1,5 +1,5 @@
 {
-  "name": "storybook-addon-component-contributors",
+  "name": "storybook-addon-contributors",
   "version": "0.0.0",
   "description": "Find the right person to talk to about a component without leaving Storybook",
   "keywords": [
@@ -10,7 +10,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/angeloashmore/storybook-addon-component-contributors.git"
+    "url": "git+https://github.com/angeloashmore/storybook-addon-contributors.git"
   },
   "files": [
     "src"
