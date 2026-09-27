@@ -26,7 +26,7 @@ const history = [
   ...commits("Quinn Harper", "Button", [7, 5, 3, 1], "story"),
 
   ...commits("Alice Chen", "Card", [760, 750, 745, 738, 730, 722, 715, 708, 700, 695, 690, 685]),
-  ...commits("Ben Okafor", "Card", [90, 45, 15]),
+  ...commits("Ben Okafor", "Card", [90, 45, 15], "revise"),
 
   ...commits("George Novak", "Input", [520, 500]),
   ...commits("Elena Rossi", "Input", [110, 75, 40, 12]),
@@ -100,6 +100,9 @@ function applyChange({ author, target, kind }, pullRequestNumber) {
     case "rewrite":
       writeFileSync(componentFile, rewrittenComponentSource(target));
       return `Rewrite ${target}`;
+    case "revise":
+      appendFileSync(componentFile, revisionSource(target, pullRequestNumber));
+      return `Add spacing presets to ${target}`;
     case "composite":
       mkdirSync(`${FIXTURE_DIR}src/${target}`, { recursive: true });
       writeFileSync(componentFile, compositeComponentSource(target));
@@ -128,10 +131,60 @@ function reformatAllFiles() {
 }
 
 function componentSource(name) {
+  if (name === "Card") return cardSource();
   return `import React from "react";
 
 export const ${name} = ({ label = "${name}" }: { label?: string }) => (
   <div style={{ padding: 8, border: "1px solid #ccc", borderRadius: 4 }}>{label}</div>
+);
+`;
+}
+
+function revisionSource(name, pullRequestNumber) {
+  return `
+export const ${name.toLowerCase()}Spacing${pullRequestNumber} = {
+  compact: ${pullRequestNumber % 8},
+  regular: ${(pullRequestNumber % 8) + 8},
+  roomy: ${(pullRequestNumber % 8) + 16},
+};
+`;
+}
+
+function cardSource() {
+  return `import React from "react";
+
+type CardProps = {
+  title?: string;
+  description?: string;
+  linkLabel?: string;
+};
+
+export const Card = ({
+  title = "Shipping to Canada",
+  description = "Orders arrive in 3 to 5 business days. Duties and taxes are paid at checkout, so nothing is due on delivery.",
+  linkLabel = "Read the shipping guide",
+}: CardProps) => (
+  <article
+    style={{
+      maxWidth: 360,
+      padding: 24,
+      border: "1px solid #e7e5e4",
+      borderRadius: 6,
+      background: "#ffffff",
+      color: "#1c1917",
+    }}
+  >
+    <h3 style={{ margin: 0, fontFamily: "Georgia, serif", fontSize: 22, fontWeight: 400 }}>{title}</h3>
+    <p style={{ margin: "10px 0 18px", fontFamily: "system-ui, sans-serif", fontSize: 15, lineHeight: 1.55, color: "#57534e" }}>
+      {description}
+    </p>
+    <a
+      href="#"
+      style={{ fontFamily: "system-ui, sans-serif", fontSize: 14, fontWeight: 600, color: "#1c1917", textUnderlineOffset: 3 }}
+    >
+      {linkLabel}
+    </a>
+  </article>
 );
 `;
 }
@@ -145,7 +198,7 @@ import { Card } from "../Card/Card";
 
 export const ${name} = () => (
   <div>
-    <Card label="${name}" />
+    <Card title="${name}" />
     <Badge label="New" />
     <Button label="Continue" />
   </div>
