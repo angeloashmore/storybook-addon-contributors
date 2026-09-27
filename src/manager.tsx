@@ -1,5 +1,5 @@
 import React from "react";
-import { AddonPanel } from "storybook/internal/components";
+import { AddonPanel, TooltipNote, TooltipProvider } from "storybook/internal/components";
 import { addons, types, useStorybookApi, useStorybookState, type API } from "storybook/manager-api";
 import { styled } from "storybook/theming";
 
@@ -48,14 +48,17 @@ addons.register(ADDON_ID, (api) => {
 function sidebarLabel(item: any, api: API) {
   if (item.type !== "component") return undefined;
   const firstEntry = api.getData(item.children[0]) as { importPath?: string } | undefined;
-  const lastChanged =
-    firstEntry?.importPath && data?.components[firstEntry.importPath]?.lastChanged;
-  if (!lastChanged || Date.parse(lastChanged) <= lastVisit) return undefined;
+  const [latestChange] =
+    (firstEntry?.importPath && data?.components[firstEntry.importPath]?.recentChanges) || [];
+  if (!latestChange || Date.parse(latestChange.date) <= lastVisit) return undefined;
 
+  const note = `New since your last visit. ${latestChange.author} changed it ${timeAgo(latestChange.date)}: ${latestChange.message}`;
   return (
     <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
       {item.name}
-      <ChangedDot title="Changed since your last visit" data-testid="changed-dot" />
+      <TooltipProvider tooltip={<TooltipNote note={note} maxWidth={280} />} placement="right">
+        <ChangedDot aria-label={note} data-testid="changed-dot" />
+      </TooltipProvider>
     </span>
   );
 }

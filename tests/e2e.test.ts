@@ -74,7 +74,17 @@ it("shows recent changes, usage, and inactive people", async () => {
 it("marks components changed since the last visit in the sidebar", async () => {
   const page = await browser.newPage();
   await page.goto(`http://localhost:${PORT}/?path=/story/scenarios-card--default`);
-  await page.getByTestId("changed-dot").first().waitFor();
+  const dot = page.getByTestId("changed-dot").first();
+  await dot.waitFor();
+
+  const box = (await dot.boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, { steps: 5 });
+  const tooltip = page.getByRole("tooltip");
+  await tooltip.waitFor();
+  expect(await tooltip.textContent()).toBe(
+    "New since your last visit. Dana Whitfield changed it 4 days ago: Handle long labels in Badge",
+  );
+
   await page.close();
 });
 

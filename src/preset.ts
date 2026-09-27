@@ -27,7 +27,6 @@ export type Contributor = {
 export type ComponentContributors = {
   files: string[];
   sourceUrl?: string;
-  lastChanged?: string;
   monthlyChanges: number[];
   recentChanges: Change[];
   usedBy: { name: string; storyId: string }[];
@@ -159,7 +158,6 @@ function describeComponent(pathspec: string[], repository: Repository): Componen
     files: [relative(process.cwd(), pathspec[0])],
     sourceUrl:
       repository.url && `${repository.url}/blob/HEAD/${relative(repository.root, pathspec[0])}`,
-    lastChanged: commits[0] && new Date(commits[0].time).toISOString(),
     monthlyChanges: countChangesPerMonth(commits),
     recentChanges: commits
       .slice(0, RECENT_CHANGE_COUNT)
