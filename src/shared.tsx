@@ -54,13 +54,21 @@ function initials(name: string): string {
     .toUpperCase();
 }
 
+export function daysSince(isoDate: string): number {
+  return (Date.now() - Date.parse(isoDate)) / DAY_MS;
+}
+
 export function timeAgo(isoDate: string): string {
-  const days = Math.floor((Date.now() - Date.parse(isoDate)) / DAY_MS);
+  const days = Math.floor(daysSince(isoDate));
   if (days < 1) return "today";
   if (days < 14) return `${days} days ago`;
   if (days < 60) return `${Math.round(days / 7)} weeks ago`;
   if (days < 365) return `${Math.round(days / 30)} months ago`;
   return `${Math.round((days / 365) * 10) / 10} years ago`;
+}
+
+export function formatDate(isoDate: string): string {
+  return new Date(isoDate).toLocaleDateString(undefined, { dateStyle: "medium" });
 }
 
 export function monthAndYear(isoDate: string): string {

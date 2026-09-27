@@ -40,9 +40,7 @@ function ContributorsBlock() {
   const contributors = component?.contributors.slice(0, 3);
   if (!component || !contributors?.length) return null;
 
-  const [mostRecent] = [...component.contributors].sort((left, right) =>
-    right.lastActive.localeCompare(left.lastActive),
-  );
+  const [latestChange] = component.recentChanges;
   const recentCount = changesInLastThreeMonths(component.monthlyChanges);
 
   return (
@@ -57,7 +55,7 @@ function ContributorsBlock() {
       <div>
         <strong>{workedOnSentence(contributors.map((contributor) => contributor.name))}</strong>
         <div style={{ color: "#73808c", fontSize: 12, marginTop: 2 }}>
-          Most recently {mostRecent.name}, {timeAgo(mostRecent.lastActive)} · Changed {recentCount}{" "}
+          Most recently {latestChange.author}, {timeAgo(latestChange.date)} · Changed {recentCount}{" "}
           {recentCount === 1 ? "time" : "times"} in the last 3 months
         </div>
       </div>

@@ -11,11 +11,11 @@ import {
 const FIXTURE_DIR = new URL("../fixture/", import.meta.url).pathname;
 const DAY_MS = 24 * 60 * 60 * 1000;
 const EDIT_MESSAGES = [
-  (component) => `Fix spacing in ${component}`,
-  (component) => `Improve ${component} accessibility`,
-  (component) => `Refine ${component} styles`,
-  (component) => `Handle long labels in ${component}`,
-  (component) => `Tidy up ${component}`,
+  "Fix spacing in",
+  "Improve accessibility of",
+  "Refine styles for",
+  "Handle long labels in",
+  "Tidy up",
 ];
 
 const history = [
@@ -104,22 +104,21 @@ function applyChange({ author, target, kind }, pullRequestNumber) {
       appendFileSync(componentFile, revisionSource(target, pullRequestNumber));
       return `Add spacing presets to ${target}`;
     case "composite":
-      mkdirSync(`${FIXTURE_DIR}src/${target}`, { recursive: true });
-      writeFileSync(componentFile, compositeComponentSource(target));
-      writeFileSync(storyFile, storySource(target));
-      return `Add ${target} component`;
+      return createComponent(target, compositeComponentSource(target));
   }
 
-  if (!existsSync(componentFile)) {
-    mkdirSync(`${FIXTURE_DIR}src/${target}`, { recursive: true });
-    writeFileSync(componentFile, componentSource(target));
-    writeFileSync(storyFile, storySource(target));
-    return `Add ${target} component`;
-  }
+  if (!existsSync(componentFile)) return createComponent(target, componentSource(target));
 
   appendFileSync(componentFile, `// change by ${author}\n`);
   if (author.endsWith("[bot]")) return `chore(${target}): apply automated fixes`;
-  return EDIT_MESSAGES[pullRequestNumber % EDIT_MESSAGES.length](target);
+  return `${EDIT_MESSAGES[pullRequestNumber % EDIT_MESSAGES.length]} ${target}`;
+}
+
+function createComponent(name, source) {
+  mkdirSync(`${FIXTURE_DIR}src/${name}`, { recursive: true });
+  writeFileSync(`${FIXTURE_DIR}src/${name}/${name}.tsx`, source);
+  writeFileSync(`${FIXTURE_DIR}src/${name}/${name}.stories.tsx`, storySource(name));
+  return `Add ${name} component`;
 }
 
 function reformatAllFiles() {

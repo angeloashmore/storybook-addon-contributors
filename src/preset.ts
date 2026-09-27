@@ -12,7 +12,13 @@ const INACTIVE_AFTER_DAYS = 180;
 const LANE_DAYS = 730;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-export type Change = { message: string; author: string; date: string; url?: string };
+export type Change = {
+  message: string;
+  author: string;
+  date: string;
+  url?: string;
+  pullRequest?: number;
+};
 
 export type Contributor = {
   name: string;
@@ -59,15 +65,10 @@ type Repository = { root: string; url?: string; lastActiveByEmail: Map<string, n
 
 let cachedData: Promise<ContributorsData> | undefined;
 
-export async function managerHead(head = "", options: any) {
-  return `${head}\n${await dataScript(options)}`;
-}
+export const managerHead = injectData;
+export const previewHead = injectData;
 
-export async function previewHead(head = "", options: any) {
-  return `${head}\n${await dataScript(options)}`;
-}
-
-async function dataScript(options: any): Promise<string> {
+async function injectData(head = "", options: any): Promise<string> {
   cachedData ??= options.presets
     .apply("storyIndexGenerator")
     .then((generator: any) => generator.getIndex())
@@ -76,7 +77,7 @@ async function dataScript(options: any): Promise<string> {
     );
   const json = JSON.stringify(await cachedData);
   const escapedForScriptTag = json.replaceAll("<", "\\u003c");
-  return `<script>window.__STORYBOOK_ADDON_CONTRIBUTORS__ = ${escapedForScriptTag};</script>`;
+  return `${head}\n<script>window.__STORYBOOK_ADDON_CONTRIBUTORS__ = ${escapedForScriptTag};</script>`;
 }
 
 export function collectContributors(entries: Record<string, StoryIndexEntry>): ContributorsData {
@@ -89,24 +90,21 @@ export function collectContributors(entries: Record<string, StoryIndexEntry>): C
 
   const repositories = new Map<string, Repository>();
   const components: ContributorsData["components"] = {};
+  const importPathByComponentFile = new Map<string, string>();
   for (const [importPath, story] of firstStoryByImportPath) {
     const pathspec = componentPathspec(story);
     const repository = findRepository(dirname(pathspec[0]), repositories);
     components[importPath] = describeComponent(pathspec, repository);
+    if (story.componentPath) importPathByComponentFile.set(pathspec[0], importPath);
   }
 
-  const importPathByComponentFile = new Map<string, string>();
-  for (const [importPath, story] of firstStoryByImportPath) {
-    if (story.componentPath)
-      importPathByComponentFile.set(resolve(story.componentPath), importPath);
-  }
   for (const importer of firstStoryByImportPath.values()) {
     if (!importer.componentPath) continue;
     for (const importedFile of relativeImports(resolve(importer.componentPath))) {
       const importedPath = importPathByComponentFile.get(importedFile);
       if (importedPath && importedPath !== importer.importPath) {
         components[importedPath].usedBy.push({
-          name: componentName(importer),
+          name: importer.title.split("/").pop()!,
           storyId: importer.id,
         });
       }
@@ -119,10 +117,6 @@ export function collectContributors(entries: Record<string, StoryIndexEntry>): C
 function componentPathspec(story: StoryIndexEntry): string[] {
   if (story.componentPath) return [resolve(story.componentPath)];
   return [dirname(resolve(story.importPath)), ":(exclude,glob)**/*.stories.*"];
-}
-
-function componentName(story: StoryIndexEntry): string {
-  return story.title.split("/").pop()!;
 }
 
 function findRepository(cwd: string, repositories: Map<string, Repository>): Repository {
@@ -190,12 +184,12 @@ function readCommits(pathspec: string[]): Commit[] {
 }
 
 function countChangedLines(numstatLines: string[]): number {
-  let total = 0;
-  for (const line of numstatLines) {
-    const [added, deleted] = line.split("\t");
-    total += (Number(added) || 0) + (Number(deleted) || 0);
-  }
-  return total;
+  return sum(
+    numstatLines.map((line) => {
+      const [added, deleted] = line.split("\t");
+      return (Number(added) || 0) + (Number(deleted) || 0);
+    }),
+  );
 }
 
 function countChangesPerMonth(commits: Commit[]): number[] {
@@ -208,15 +202,17 @@ function countChangesPerMonth(commits: Commit[]): number[] {
 }
 
 function describeChange(commit: Commit, repository: Repository): Change {
-  const pullRequest = commit.message.match(/^(.*) \(#(\d+)\)$/);
+  const pullRequestMatch = commit.message.match(/^(.*) \(#(\d+)\)$/);
+  const pullRequest = pullRequestMatch ? Number(pullRequestMatch[2]) : undefined;
   const url = pullRequest
-    ? `${repository.url}/pull/${pullRequest[2]}`
+    ? `${repository.url}/pull/${pullRequest}`
     : `${repository.url}/commit/${commit.sha}`;
   return {
-    message: pullRequest ? pullRequest[1] : commit.message,
+    message: pullRequestMatch ? pullRequestMatch[1] : commit.message,
     author: commit.name,
     date: new Date(commit.time).toISOString(),
     url: repository.url && url,
+    pullRequest,
   };
 }
 
@@ -225,21 +221,20 @@ function rankContributors(
   pathspec: string[],
   repository: Repository,
 ): Contributor[] {
-  const commitsByEmail = new Map<string, Commit[]>();
-  for (const commit of commits) {
-    commitsByEmail.set(commit.email, [...(commitsByEmail.get(commit.email) ?? []), commit]);
-  }
-
-  const activityByEmail = new Map<string, number>();
-  for (const [email, personCommits] of commitsByEmail) {
-    let activity = 0;
-    for (const commit of personCommits)
-      activity += recencyWeight(commit.time) * Math.log2(2 + commit.changedLines);
-    activityByEmail.set(email, activity);
-  }
+  const commitsByEmail = Map.groupBy(commits, (commit) => commit.email);
+  const activityByEmail = new Map(
+    [...commitsByEmail].map(([email, personCommits]) => [
+      email,
+      sum(
+        personCommits.map(
+          (commit) => recencyWeight(commit.time) * Math.log2(2 + commit.changedLines),
+        ),
+      ),
+    ]),
+  );
   const authoredLinesByEmail = countAuthoredLines(pathspec);
-  const totalActivity = sum(activityByEmail.values());
-  const totalAuthoredLines = sum(authoredLinesByEmail.values()) || 1;
+  const totalActivity = sum([...activityByEmail.values()]);
+  const totalAuthoredLines = sum([...authoredLinesByEmail.values()]) || 1;
 
   const contributors = [...commitsByEmail].map(([email, personCommits]): Contributor => {
     const latest = personCommits[0];
@@ -308,10 +303,8 @@ function daysAgo(time: number): number {
   return (Date.now() - time) / DAY_MS;
 }
 
-function sum(values: Iterable<number>): number {
-  let total = 0;
-  for (const value of values) total += value;
-  return total;
+function sum(numbers: number[]): number {
+  return numbers.reduce((total, value) => total + value, 0);
 }
 
 function git(cwd: string, args: string[]): string {

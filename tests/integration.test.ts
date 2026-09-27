@@ -65,7 +65,7 @@ it("lists recent changes with pull request links", () => {
   const [latest] = data.components[storyImportPath("Card")].recentChanges;
   expect(latest.author).toBe("Ben Okafor");
   expect(latest.message).not.toMatch(/\(#\d+\)/);
-  expect(latest.url).toMatch(/^https:\/\/github\.com\/acme\/design-system\/pull\/\d+$/);
+  expect(latest.url).toBe(`https://github.com/acme/design-system/pull/${latest.pullRequest}`);
 });
 
 it("links to the component source", () => {

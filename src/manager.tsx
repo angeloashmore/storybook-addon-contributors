@@ -8,6 +8,8 @@ import {
   ADDON_ID,
   Avatar,
   changesInLastThreeMonths,
+  daysSince,
+  formatDate,
   monthAndYear,
   readContributorsData,
   SHOW_PANEL_EVENT,
@@ -15,7 +17,6 @@ import {
 } from "./shared";
 
 const PANEL_ID = `${ADDON_ID}/panel`;
-const DAY_MS = 24 * 60 * 60 * 1000;
 const RECENTLY_CHANGED_DAYS = 7;
 const LANE_DAYS = 730;
 const LANE_WIDTH = 200;
@@ -48,12 +49,7 @@ function sidebarLabel(item: any, api: API) {
   const firstEntry = api.getData(item.children[0]) as { importPath?: string } | undefined;
   const [latestChange] =
     (firstEntry?.importPath && data?.components[firstEntry.importPath]?.recentChanges) || [];
-  if (
-    !latestChange ||
-    Date.now() - Date.parse(latestChange.date) > RECENTLY_CHANGED_DAYS * DAY_MS
-  ) {
-    return undefined;
-  }
+  if (!latestChange || daysSince(latestChange.date) > RECENTLY_CHANGED_DAYS) return undefined;
 
   const note = `Changed ${timeAgo(latestChange.date)}`;
   return (
@@ -76,14 +72,13 @@ function Panel() {
   }
 
   const componentName = story.title.split("/").pop();
-  const updated = new Date(data.generatedAt).toLocaleDateString(undefined, { dateStyle: "medium" });
 
   return (
     <Wrapper>
       <Header>
         <div>
           <strong>People who have worked on {componentName}</strong>
-          <Muted as="div">
+          <Muted>
             <UsedBy usedBy={component.usedBy} />
             {component.sourceUrl && (
               <>
@@ -117,7 +112,7 @@ function Panel() {
               <strong>{change.message}</strong>{" "}
               {change.url && (
                 <Link href={change.url} target="_blank" rel="noreferrer">
-                  {change.url.includes("/pull/") ? `#${change.url.split("/").pop()}` : "commit"}
+                  {change.pullRequest ? `#${change.pullRequest}` : "commit"}
                 </Link>
               )}
               <Muted>
@@ -125,7 +120,9 @@ function Panel() {
               </Muted>
             </Row>
           ))}
-          <Muted style={{ marginTop: 10 }}>Ordered by recent involvement · Updated {updated}</Muted>
+          <Muted style={{ marginTop: 10 }}>
+            Ordered by recent involvement · Updated {formatDate(data.generatedAt)}
+          </Muted>
         </div>
       </Columns>
     </Wrapper>
@@ -214,19 +211,17 @@ function Lane({ changes }: { changes: Contributor["changes"] }) {
     <svg width={LANE_WIDTH} height="24" role="img" aria-label="Changes over the last 2 years">
       <rect x="0" y="11" width={LANE_WIDTH} height="2" fill="#e3e8ee" />
       {changes.map((change) => {
-        const daysAgo = (Date.now() - Date.parse(change.date)) / DAY_MS;
-        const date = new Date(change.date).toLocaleDateString(undefined, { dateStyle: "medium" });
         return (
           <rect
             key={change.date}
-            x={(1 - daysAgo / LANE_DAYS) * (LANE_WIDTH - 4)}
+            x={(1 - daysSince(change.date) / LANE_DAYS) * (LANE_WIDTH - 4)}
             y="5"
             width="3"
             height="14"
             rx="1.5"
             fill="#029cfd"
           >
-            <title>{`${change.message} · ${date}`}</title>
+            <title>{`${change.message} · ${formatDate(change.date)}`}</title>
           </rect>
         );
       })}
