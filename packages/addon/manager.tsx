@@ -35,7 +35,7 @@ function Panel() {
             <div>
               <strong data-testid="contributor-name">{p.name}</strong>
               <Muted as="div">
-                Worked on this in {p.commits} {p.commits === 1 ? 'commit' : 'commits'} · last active{' '}
+                Worked on this in {p.commits} {p.commits === 1 ? 'change' : 'changes'} · last active{' '}
                 <time dateTime={p.lastActive} title={new Date(p.lastActive).toDateString()}>
                   {timeAgo(p.lastActive)}
                 </time>
@@ -44,10 +44,7 @@ function Panel() {
           </Row>
         ))}
       </ul>
-      <Muted>
-        From git history as of {new Date(data.generatedAt).toDateString()}. Recent work counts more: a change's weight
-        halves every {data.halfLifeDays} days.
-      </Muted>
+      <Muted>Ordered by recent involvement · Updated {new Date(data.generatedAt).toLocaleDateString(undefined, { dateStyle: 'medium' })}</Muted>
     </div>
   );
 }

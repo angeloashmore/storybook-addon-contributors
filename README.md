@@ -7,7 +7,7 @@ relevant first. Use it to find someone to ask a question, request a review from,
 from. You don't need git or any accounts: recent work counts most, and the list comes from your
 repository's history when Storybook is built.
 
-![The Contributors panel under a story in Storybook, listing three people with commit counts and last-active dates](docs/screenshot.png)
+![The Contributors panel under a story in Storybook, listing three people with how often and how recently each worked on the component](docs/screenshot.png)
 
 ## Install
 

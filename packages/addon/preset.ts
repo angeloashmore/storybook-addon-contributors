@@ -16,7 +16,6 @@ export interface Contributor {
 
 export interface ContributorsData {
   generatedAt: string;
-  halfLifeDays: number;
   /** Keyed by the story file's importPath. */
   components: Record<string, { files: string[]; contributors: Contributor[] }>;
 }
@@ -68,7 +67,7 @@ export function collectContributors(
         })),
     };
   }
-  return { generatedAt: new Date().toISOString(), halfLifeDays, components };
+  return { generatedAt: new Date().toISOString(), components };
 }
 
 export async function managerHead(head = '', options: any) {
