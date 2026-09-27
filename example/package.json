@@ -7,7 +7,7 @@
     "react": "^19",
     "react-dom": "^19",
     "storybook": "10.6.0",
-    "storybook-addon-component-contributors": "workspace:*",
+    "storybook-addon-component-contributors": "*",
     "vite": "^7.0.0"
   }
 }

@@ -1,14 +1,13 @@
 {
   "private": true,
   "type": "module",
-  "packageManager": "pnpm@10.33.0",
   "scripts": {
     "fixture": "node example/scripts/generate-fixture.mjs",
-    "dev": "pnpm fixture && pnpm --filter example exec storybook dev -p 6006",
-    "build": "pnpm fixture && pnpm --filter example exec storybook build -o storybook-static",
+    "dev": "npm run fixture && npm exec -w example -- storybook dev -p 6006",
+    "build": "npm run fixture && npm exec -w example -- storybook build -o storybook-static",
     "test": "vitest run",
     "typecheck": "tsc",
-    "evals": "node evals/run.ts"
+    "evals": "vitest run --project evals --reporter=default --reporter=./evals/reporter.ts"
   },
   "devDependencies": {
     "@anthropic-ai/claude-agent-sdk": "^0.3.283",
@@ -18,5 +17,9 @@
     "storybook": "10.6.0",
     "typescript": "^5.9.3",
     "vitest": "^5.0.2"
-  }
+  },
+  "workspaces": [
+    "packages/*",
+    "example"
+  ]
 }

@@ -26,12 +26,14 @@ it('uses componentPath, or the story folder without it', () => {
   expect(data.components['./fixture/src/Button/Button.stories.tsx'].files).toEqual(['fixture/src/Button/Button.tsx']);
   const fallback = collectContributors(Object.fromEntries(Object.entries(entries).map(([k, { componentPath, ...e }]) => [k, e])));
   expect(fallback.components['./fixture/src/Button/Button.stories.tsx'].files).toEqual(['fixture/src/Button']);
-  for (const s of scenarios) expect(s.top).toContain(ranked(fallback, s.component)[0]);
+  for (const s of scenarios) expectRanking(ranked(fallback, s.component), s);
+  expect(JSON.stringify(fallback)).not.toContain('Quinn Harper');
 });
 
 it('skips bots and merge commits, and never includes emails', () => {
   const json = JSON.stringify(data);
   expect(json).not.toMatch(/\[bot\]|Ivan Petrov|@/);
+  expect(json).not.toContain('Quinn Harper'); // story-only edits
 });
 
 it('respects the half-life option', () => {

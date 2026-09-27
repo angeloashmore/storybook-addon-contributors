@@ -1,16 +1,34 @@
 # Component Contributors
 
-A Storybook 10 addon (React + Vite) that adds a **Contributors** panel. It lists the people who
-have worked on the current story's component, most relevant first. The data comes from local git
-history at dev/build time, so the static Storybook works without the repo or any accounts.
+Find the right person to talk to about a component without leaving Storybook.
+
+The **Contributors** panel lists the people who have worked on the component a story shows, most
+relevant first. Use it to find someone to ask a question, request a review from, or get an update
+from. You don't need git or any accounts: recent work counts most, and the list comes from your
+repository's history when Storybook is built.
+
+![The Contributors panel under a story in Storybook, listing three people with commit counts and last-active dates](docs/screenshot.png)
+
+## Install
+
+Requires Storybook 10.
+
+```sh
+npm install --save-dev storybook-addon-component-contributors
+```
 
 ```ts
 // .storybook/main.ts
-addons: [{ name: 'storybook-addon-component-contributors', options: { halfLifeDays: 182 } }]
+export default {
+  addons: ['storybook-addon-component-contributors'],
+};
 ```
 
-Each commit counts 0.5^(age / half-life). Merge commits and `[bot]` authors are skipped.
-Emails never reach the browser; only a SHA-256 hash for Gravatar does, and a guessable email can
-still be matched to its hash.
+Run or build Storybook from a git checkout with full history. A static build keeps working after
+you deploy it without the repository.
 
-Run `pnpm install`, then `pnpm dev`, `pnpm build`, `pnpm test` or `pnpm evals`. See CLAUDE.md for details.
+To change how quickly older work fades (default: a change's weight halves every 182 days):
+
+```ts
+addons: [{ name: 'storybook-addon-component-contributors', options: { halfLifeDays: 90 } }],
+```

@@ -28,12 +28,15 @@ export function collectContributors(
   const components: ContributorsData['components'] = {};
   for (const { type, importPath, componentPath } of Object.values(entries)) {
     if (type !== 'story' || components[importPath]) continue;
+    // Track what the story shows, not the story: the component file, or the
+    // story's folder minus story files when the index has no componentPath.
     const target = componentPath ? resolve(componentPath) : dirname(resolve(importPath));
+    const pathspec = componentPath ? [target] : [target, ':(exclude,glob)**/*.stories.*'];
     const people = new Map<string, { name: string; commits: number; score: number; last: number }>();
 
     let log = '';
     try {
-      log = execFileSync('git', ['log', '--no-merges', '--format=%an%x1f%ae%x1f%at', '--', target], {
+      log = execFileSync('git', ['log', '--no-merges', '--format=%an%x1f%ae%x1f%at', '--', ...pathspec], {
         cwd: dirname(target),
         encoding: 'utf8',
         stdio: ['ignore', 'pipe', 'ignore'],

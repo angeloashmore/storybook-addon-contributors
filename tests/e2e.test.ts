@@ -23,7 +23,7 @@ const server = createServer((req, res) => {
 let browser: Browser;
 
 beforeAll(async () => {
-  execFileSync('pnpm', ['build'], { cwd: `${EXAMPLE}..`, stdio: 'ignore' }); // also regenerates the fixture
+  execFileSync('npm', ['run', 'build'], { cwd: `${EXAMPLE}..`, stdio: 'ignore' }); // also regenerates the fixture
   await new Promise<void>((r) => server.listen(6199, r));
   browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH }); // optional preinstalled Chromium
 });

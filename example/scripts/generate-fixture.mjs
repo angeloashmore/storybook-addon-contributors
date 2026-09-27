@@ -15,6 +15,8 @@ const history = [
   // 1. Clear owner: Priya made most commits, recently.
   ...commits('Marcus Lee', 'Button', [260, 200]),
   ...commits('Priya Patel', 'Button', [120, 90, 70, 50, 35, 21, 8]),
+  // Quinn only edits the story, not the component, so Quinn never counts.
+  ...commits('Quinn Harper', 'Button.stories', [7, 5, 3, 1]),
   // 2. Faded original author: Alice ~2 years ago, Ben fewer but recent.
   ...commits('Alice Chen', 'Card', [760, 750, 745, 738, 730, 722, 715, 708, 700, 695, 690, 685]),
   ...commits('Ben Okafor', 'Card', [90, 45, 15]),
@@ -47,6 +49,10 @@ function change(author, target) {
       writeFileSync(out + f, f.endsWith('.tsx') ? text.replaceAll('"', "'") : text + '\n');
     }
     return 'style: reformat entire codebase';
+  }
+  if (target.endsWith('.stories')) {
+    appendFileSync(`${out}src/${target.split('.')[0]}/${target}.tsx`, `// story tweak by ${author}\n`);
+    return `docs: tweak ${target}`;
   }
   if (target.endsWith('.md')) {
     appendFileSync(out + target, `Updated by ${author}\n`);

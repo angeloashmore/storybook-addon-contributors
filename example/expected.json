@@ -5,7 +5,7 @@
       "component": "Button",
       "storyId": "scenarios-button--default",
       "scenario": "clear-owner",
-      "intent": "Priya made most commits, recently. Marcus created it earlier; Sam only reformatted it.",
+      "intent": "Priya made most commits, recently. Marcus created it earlier; Sam only reformatted it. Quinn only edited the story file, not the component, so Quinn must not appear.",
       "top": ["Priya Patel"],
       "top3": ["Priya Patel", "Marcus Lee", "Sam Rivera"]
     },
