@@ -17,9 +17,9 @@ const RUNS = Number(process.env.EVAL_RUNS ?? 3);
 const CONCURRENCY = Number(process.env.EVAL_CONCURRENCY ?? 3);
 const EXAMPLE = new URL('../example/', import.meta.url).pathname;
 const QUESTIONS = [
-  (c: string) => `Who should I talk to about making a change to the ${c} component? List up to three people, most relevant first.`,
-  (c: string) => `Who would be the best reviewer for a change to ${c}? List up to three people, most relevant first.`,
-  (c: string) => `Who should I ask for an update on ${c}? List up to three people, most relevant first.`,
+  (c: string) => `Who should I talk to about making a change to the ${c} component?`,
+  (c: string) => `Who would be the best reviewer for a change to ${c}?`,
+  (c: string) => `Who should I ask for an update on ${c}?`,
 ];
 
 if (!process.env.ANTHROPIC_API_KEY) {
@@ -44,7 +44,7 @@ const readOnlyGit = /^git (log|show|blame|shortlog|ls-files|ls-tree|diff|grep|re
 async function askAgent(question: string): Promise<{ people: string[]; reasoning: string }> {
   let text = '';
   for await (const msg of query({
-    prompt: `${question}\n\nAnswer with JSON only: {"people": ["Name", ...], "reasoning": "..."}`,
+    prompt: `${question} List up to three people, most relevant first.\n\nAnswer with JSON only: {"people": ["Name", ...], "reasoning": "..."}`,
     options: {
       cwd: repo,
       model: MODEL,
@@ -97,13 +97,13 @@ await Promise.all(
   }),
 );
 
-// Report: one row per scenario × question, averaged over runs.
-const METRICS = ['addon top1', 'addon top3', 'agent top1', 'agent top3', 'agree top1', 'agree top3'];
+// One row per scenario × question, averaged over runs.
 const avg = (rs: any[], k: string) => rs.reduce((sum, r) => sum + r[k], 0) / rs.length;
 const table = scenarios.flatMap((s) =>
   QUESTIONS.map((_, qi) => {
     const rs = results.filter((r) => r.component === s.component && r.q === qi + 1);
-    return { component: s.component, q: qi + 1, ...Object.fromEntries(METRICS.map((k) => [k, `${Math.round(100 * avg(rs, k))}%`])) };
+    const metrics = ['addon top1', 'addon top3', 'agent top1', 'agent top3', 'agree top1', 'agree top3'];
+    return { component: s.component, q: qi + 1, ...Object.fromEntries(metrics.map((k) => [k, `${Math.round(100 * avg(rs, k))}%`])) };
   }),
 );
 console.table(table);

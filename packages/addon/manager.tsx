@@ -19,16 +19,15 @@ addons.register('component-contributors', () => {
 });
 
 function Panel() {
-  const { storyId, index } = useStorybookState(); // re-renders on story change
+  const { storyId, index } = useStorybookState();
   const data: ContributorsData | undefined = (window as any).__COMPONENT_CONTRIBUTORS__;
-  const story = storyId ? (index?.[storyId] as { importPath?: string; title?: string }) : undefined;
-  const people = story?.importPath ? data?.components[story.importPath]?.contributors : undefined;
-
+  const story = index?.[storyId] as { importPath?: string; title: string } | undefined;
+  const people = data?.components[story?.importPath!]?.contributors;
   if (!data || !people?.length) return <Muted>No git history was found for this component.</Muted>;
 
   return (
     <div style={{ padding: '12px 16px' }}>
-      <strong>People who have worked on {story!.title!.split('/').pop()}</strong>
+      <strong>People who have worked on {story!.title.split('/').pop()}</strong>
       <ul style={{ listStyle: 'none', margin: '8px 0', padding: 0 }}>
         {people.map((p) => (
           <Row key={p.gravatarHash}>
@@ -57,8 +56,7 @@ function Avatar({ person }: { person: Contributor }) {
   const [failed, setFailed] = useState(false);
   const style = { width: 40, height: 40, borderRadius: '50%', flexShrink: 0 };
   if (failed) {
-    const initials = person.name.split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase();
-    return <Initials style={style}>{initials}</Initials>;
+    return <Initials style={style}>{person.name.split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase()}</Initials>;
   }
   const src = `https://www.gravatar.com/avatar/${person.gravatarHash}?s=80&d=identicon`;
   return <img src={src} alt="" style={style} onError={() => setFailed(true)} />;
@@ -74,17 +72,5 @@ function timeAgo(iso: string) {
 }
 
 const Muted = styled.p(({ theme }) => ({ color: theme.textMutedColor, fontSize: theme.typography.size.s1, margin: 0 }));
-const Row = styled.li(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  gap: 12,
-  padding: '8px 0',
-  borderBottom: `1px solid ${theme.appBorderColor}`,
-}));
-const Initials = styled.span(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  fontWeight: 'bold',
-  background: theme.background.hoverable,
-}));
+const Row = styled.li(({ theme }) => ({ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0', borderBottom: `1px solid ${theme.appBorderColor}` }));
+const Initials = styled.span(({ theme }) => ({ display: 'grid', placeItems: 'center', fontWeight: 'bold', background: theme.background.hoverable }));
