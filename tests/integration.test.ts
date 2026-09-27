@@ -36,8 +36,3 @@ it('skips bots and merge commits, and never includes emails', () => {
   expect(json).not.toContain('Quinn Harper'); // story-only edits
 });
 
-it('respects the half-life option', () => {
-  // With a huge half-life, raw commit counts dominate and Alice wins Card.
-  expect(ranked(collectContributors(entries, { halfLifeDays: 1e6 }), 'Card')[0]).toBe('Alice Chen');
-});
-

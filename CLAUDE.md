@@ -6,7 +6,7 @@ component, so designers, PMs, QA and new engineers can find someone to ask, with
 
 ## Principles
 - People first, stats second: names and faces lead; numbers are secondary text.
-- Recent matters most. score = 0.7 × share of recent activity + 0.3 × share of today's lines (`git blame -w -M`). Activity per commit = 0.5^(ageDays / halfLifeDays) × log2(2 + lines changed); default half-life 182 days, addon option `halfLifeDays`. Show last-active date.
+- Recent matters most. score = 0.7 × share of recent activity + 0.3 × share of today's lines (`git blame -w -M`). Activity per commit = 0.5^(ageDays / 182) × log2(2 + lines changed). No configuration options. Show last-active date.
 - Happy path first: this is a POC, so don't add handling for edge cases.
 - Honest wording: "worked on this", never "owner".
 - Zero setup for viewers.

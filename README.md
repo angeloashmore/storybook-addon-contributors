@@ -24,11 +24,35 @@ export default {
 };
 ```
 
-Run or build Storybook from a git checkout with full history. A static build keeps working after
-you deploy it without the repository.
+## Deploying
 
-To change how quickly older work fades (default: a change's weight halves every 182 days):
+The contributor list is built into Storybook when you build it, so the deployed site doesn't need
+the repository. The build does need the full git history. Many CI systems fetch only the latest
+commits by default, which leaves the panel showing only recent contributors.
 
-```ts
-addons: [{ name: 'storybook-addon-component-contributors', options: { halfLifeDays: 90 } }],
+**GitHub Actions**
+
+```yaml
+- uses: actions/checkout@v4
+  with:
+    fetch-depth: 0 # full history
+- run: npm ci
+- run: npx storybook build
+```
+
+**GitLab CI**
+
+```yaml
+build-storybook:
+  variables:
+    GIT_DEPTH: 0 # full history
+  script:
+    - npm ci
+    - npx storybook build
+```
+
+**Any other CI or host:** fetch the full history before building.
+
+```sh
+git fetch --unshallow || true; npx storybook build
 ```
