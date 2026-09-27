@@ -21,6 +21,7 @@ export default defineConfig({
           name: "evals",
           include: ["evals/*.eval.ts"],
           pool: "forks",
+          sequence: { concurrent: true },
           maxConcurrency: 8,
           testTimeout: 600_000,
         },
