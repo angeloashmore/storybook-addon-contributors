@@ -7,6 +7,8 @@ relevant first. Use it to find someone to ask a question, request a review from,
 from. You don't need git or any accounts: recent work counts most, and the list comes from your
 repository's history when Storybook is built.
 
+![The Contributors panel in Storybook, listing the people who worked on a Card component, most relevant first](https://github.com/user-attachments/assets/819c90e9-ed76-4ce9-bc5d-7f333914b908)
+
 ## Install
 
 Requires Storybook 10.
