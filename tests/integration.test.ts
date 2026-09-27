@@ -40,3 +40,4 @@ it('respects the half-life option', () => {
   // With a huge half-life, raw commit counts dominate and Alice wins Card.
   expect(ranked(collectContributors(entries, { halfLifeDays: 1e6 }), 'Card')[0]).toBe('Alice Chen');
 });
+

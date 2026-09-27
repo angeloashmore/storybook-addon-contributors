@@ -6,40 +6,81 @@
       "storyId": "scenarios-button--default",
       "scenario": "clear-owner",
       "intent": "Priya made most commits, recently. Marcus created it earlier; Sam only reformatted it. Quinn only edited the story file, not the component, so Quinn must not appear.",
-      "top": ["Priya Patel"],
-      "top3": ["Priya Patel", "Marcus Lee", "Sam Rivera"]
+      "top": [
+        "Priya Patel"
+      ],
+      "top3": [
+        "Priya Patel",
+        "Marcus Lee",
+        "Sam Rivera"
+      ]
     },
     {
       "component": "Card",
       "storyId": "scenarios-card--default",
       "scenario": "faded-original-author",
       "intent": "Alice wrote most of it about two years ago and went quiet. Ben made fewer but recent changes, so Ben is the right person now.",
-      "top": ["Ben Okafor"],
-      "top3": ["Ben Okafor", "Alice Chen", "Sam Rivera"]
+      "top": [
+        "Ben Okafor"
+      ],
+      "top3": [
+        "Ben Okafor",
+        "Alice Chen",
+        "Sam Rivera"
+      ]
     },
     {
       "component": "Input",
       "storyId": "scenarios-input--default",
       "scenario": "shared",
       "intent": "Elena and Farid have similar, recent activity. Either can be first; both belong in the top two.",
-      "top": ["Elena Rossi", "Farid Haddad"],
-      "top3": ["Elena Rossi", "Farid Haddad"]
+      "top": [
+        "Elena Rossi",
+        "Farid Haddad"
+      ],
+      "top3": [
+        "Elena Rossi",
+        "Farid Haddad"
+      ]
     },
     {
       "component": "Tabs",
       "storyId": "scenarios-tabs--default",
       "scenario": "noise",
       "intent": "Hana is the real contributor. Bots commit often and recently, Ivan's merge commits bring in Hana's work, and Sam made one big recent formatting commit. None of those should rank first; bots and merge-only committers should not appear.",
-      "top": ["Hana Suzuki"],
-      "top3": ["Hana Suzuki", "Leo Martin", "Sam Rivera"]
+      "top": [
+        "Hana Suzuki"
+      ],
+      "top3": [
+        "Hana Suzuki",
+        "Leo Martin",
+        "Sam Rivera"
+      ]
+    },
+    {
+      "component": "Dialog",
+      "storyId": "scenarios-dialog--default",
+      "scenario": "recent-rewrite",
+      "intent": "Nora rewrote Dialog six weeks ago and wrote almost all of today's code. Omar has made more commits since, but each is a one-line tweak. Paul created the original, which no longer exists. Nora knows the current code best; Omar is a reasonable second.",
+      "top": [
+        "Nora Blake"
+      ],
+      "top3": [
+        "Nora Blake",
+        "Omar Farouk"
+      ]
     },
     {
       "component": "Badge",
       "storyId": "scenarios-badge--default",
       "scenario": "single-contributor",
       "intent": "Dana is the only person who has worked on it.",
-      "top": ["Dana Whitfield"],
-      "top3": ["Dana Whitfield"]
+      "top": [
+        "Dana Whitfield"
+      ],
+      "top3": [
+        "Dana Whitfield"
+      ]
     }
   ]
 }

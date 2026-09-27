@@ -5,11 +5,11 @@ import { execFileSync } from 'node:child_process';
 import { appendFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 
 const out = new URL('../fixture/', import.meta.url).pathname;
-const commits = (author, target, daysAgo, merge) => daysAgo.map((d) => [d, author, target, merge]);
+const commits = (author, target, daysAgo, how) => daysAgo.map((d) => [d, author, target, how]);
 
 // The first commit to a component creates it; later ones edit it. "*" is the big
-// formatting commit touching every file. `merge` commits land on a branch that
-// Ivan merges with --no-ff.
+// formatting commit touching every file. `how` is 'merge' (lands on a branch
+// that Ivan merges with --no-ff) or 'rewrite' (replaces the whole component).
 const history = [
   ...commits('Ivan Petrov', 'README.md', [800]),
   // 1. Clear owner: Priya made most commits, recently.
@@ -31,6 +31,10 @@ const history = [
   ...commits('renovate[bot]', 'Tabs', [26, 9]),
   ...commits('dependabot[bot]', 'README.md', [40, 25, 5]),
   ...commits('Sam Rivera', '*', [20]),
+  // 6. Rewrite: Nora rewrote Dialog recently; Omar made more but tiny tweaks since.
+  ...commits('Paul Grant', 'Dialog', [700, 650]),
+  ...commits('Nora Blake', 'Dialog', [45], 'rewrite'),
+  ...commits('Omar Farouk', 'Dialog', [40, 30, 25, 15, 10]),
   // 5. Single contributor, added after the reformat.
   ...commits('Dana Whitfield', 'Badge', [10, 4]),
 ].sort((a, b) => b[0] - a[0]);
@@ -42,7 +46,7 @@ const as = (name, daysAgo) => {
   return { GIT_AUTHOR_NAME: name, GIT_AUTHOR_EMAIL: email, GIT_AUTHOR_DATE: date, GIT_COMMITTER_NAME: name, GIT_COMMITTER_EMAIL: email, GIT_COMMITTER_DATE: date };
 };
 
-function change(author, target) {
+function change(author, target, how) {
   if (target === '*') {
     for (const f of git(['ls-files']).trim().split('\n')) {
       const text = readFileSync(out + f, 'utf8');
@@ -59,6 +63,12 @@ function change(author, target) {
     return `docs: update ${target}`;
   }
   const dir = `${out}src/${target}/`;
+  if (how === 'rewrite') {
+    // No quotes in the new lines, so the later reformat does not touch them.
+    const steps = Array.from({ length: 40 }, (_, i) => `  { id: ${i + 1}, done: ${i % 2 === 0} },`).join('\n');
+    writeFileSync(`${dir}${target}.tsx`, `import React from "react";\n\nconst steps = [\n${steps}\n];\n\nexport const ${target} = ({ label = "${target}" }: { label?: string }) => (\n  <div role="dialog">\n    {label}: {steps.filter((s) => s.done).length} of {steps.length} done\n  </div>\n);\n`);
+    return `refactor: rewrite ${target}`;
+  }
   if (existsSync(dir)) {
     appendFileSync(`${dir}${target}.tsx`, `// change by ${author}\n`);
     return `update ${target}`;
@@ -75,9 +85,10 @@ mkdirSync(out);
 git(['init', '-q', '-b', 'main']);
 git(['config', 'commit.gpgsign', 'false']);
 
-for (const [daysAgo, author, target, merge] of history) {
+for (const [daysAgo, author, target, how] of history) {
+  const merge = how === 'merge';
   if (merge) git(['checkout', '-q', '-b', 'feature']);
-  const message = change(author, target);
+  const message = change(author, target, how);
   git(['add', '-A']);
   git(['commit', '-q', '-m', message], as(author, daysAgo));
   if (merge) {
