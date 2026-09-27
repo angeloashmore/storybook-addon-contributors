@@ -1,0 +1,7 @@
+packages:
+  - packages/*
+  - example
+  - tests
+  - evals
+onlyBuiltDependencies:
+  - esbuild

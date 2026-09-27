@@ -1,0 +1,14 @@
+{
+  "name": "component-contributors-workspace",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.33.0",
+  "scripts": {
+    "build:addon": "pnpm --filter storybook-addon-component-contributors build",
+    "fixture": "node example/scripts/generate-fixture.mjs",
+    "dev": "pnpm build:addon && pnpm fixture && pnpm --filter example storybook",
+    "build": "pnpm build:addon && pnpm fixture && pnpm --filter example build-storybook",
+    "test": "pnpm build:addon && pnpm --filter tests exec vitest run",
+    "evals": "pnpm build:addon && pnpm --filter evals exec tsx run.ts"
+  }
+}

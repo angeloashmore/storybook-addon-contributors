@@ -1,0 +1,45 @@
+{
+  "$comment": "Expected answers per scenario, written from each scenario's intent (not by running the addon). `top` lists the acceptable top-1 people (either is fine when there are several). `top3` lists the people who should appear somewhere in the top three, in any order. When `top3` has fewer than three names, the remaining slots are not specified.",
+  "scenarios": [
+    {
+      "component": "Button",
+      "storyId": "scenarios-button--default",
+      "scenario": "clear-owner",
+      "intent": "Priya made most commits, recently. Marcus created it earlier; Sam only reformatted it.",
+      "top": ["Priya Patel"],
+      "top3": ["Priya Patel", "Marcus Lee", "Sam Rivera"]
+    },
+    {
+      "component": "Card",
+      "storyId": "scenarios-card--default",
+      "scenario": "faded-original-author",
+      "intent": "Alice wrote most of it about two years ago and went quiet. Ben made fewer but recent changes, so Ben is the right person now.",
+      "top": ["Ben Okafor"],
+      "top3": ["Ben Okafor", "Alice Chen", "Sam Rivera"]
+    },
+    {
+      "component": "Input",
+      "storyId": "scenarios-input--default",
+      "scenario": "shared",
+      "intent": "Elena and Farid have similar, recent activity. Either can be first; both belong in the top two.",
+      "top": ["Elena Rossi", "Farid Haddad"],
+      "top3": ["Elena Rossi", "Farid Haddad"]
+    },
+    {
+      "component": "Tabs",
+      "storyId": "scenarios-tabs--default",
+      "scenario": "noise",
+      "intent": "Hana is the real contributor. Bots commit often and recently, Ivan's merge commits bring in Hana's work, and Sam made one big recent formatting commit. None of those should rank first; bots and merge-only committers should not appear.",
+      "top": ["Hana Suzuki"],
+      "top3": ["Hana Suzuki", "Leo Martin", "Sam Rivera"]
+    },
+    {
+      "component": "Badge",
+      "storyId": "scenarios-badge--default",
+      "scenario": "single-contributor",
+      "intent": "Dana is the only person who has worked on it.",
+      "top": ["Dana Whitfield"],
+      "top3": ["Dana Whitfield"]
+    }
+  ]
+}
