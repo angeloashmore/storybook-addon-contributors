@@ -1,14 +1,31 @@
-import React, { useState } from "react";
+import React from "react";
 import { AddonPanel } from "storybook/internal/components";
-import { addons, types, useStorybookState } from "storybook/manager-api";
+import { addons, types, useStorybookApi, useStorybookState, type API } from "storybook/manager-api";
 import { styled } from "storybook/theming";
 
-import type { Contributor, ContributorsData } from "./preset";
+import type { ComponentContributors, Contributor } from "./preset";
+import {
+  ADDON_ID,
+  Avatar,
+  changesInLastThreeMonths,
+  monthAndYear,
+  readContributorsData,
+  SHOW_PANEL_EVENT,
+  timeAgo,
+} from "./shared";
 
+const PANEL_ID = `${ADDON_ID}/panel`;
+const LAST_VISIT_KEY = `${ADDON_ID}/last-visit`;
 const DAY_MS = 24 * 60 * 60 * 1000;
+const LANE_DAYS = 730;
+const LANE_WIDTH = 200;
 
-addons.register("storybook-addon-contributors", () => {
-  addons.add("storybook-addon-contributors/panel", {
+const data = readContributorsData();
+const lastVisit = Number(localStorage.getItem(LAST_VISIT_KEY)) || Date.now() - 7 * DAY_MS;
+localStorage.setItem(LAST_VISIT_KEY, String(Date.now()));
+
+addons.register(ADDON_ID, (api) => {
+  addons.add(PANEL_ID, {
     type: types.PANEL,
     title: "Contributors",
     match: ({ viewMode }) => viewMode === "story",
@@ -18,15 +35,37 @@ addons.register("storybook-addon-contributors", () => {
       </AddonPanel>
     ),
   });
+
+  addons.setConfig({ sidebar: { renderLabel: sidebarLabel } });
+
+  addons.getChannel().on(SHOW_PANEL_EVENT, (storyId: string) => {
+    api.selectStory(storyId);
+    api.setSelectedPanel(PANEL_ID);
+    api.togglePanel(true);
+  });
 });
+
+function sidebarLabel(item: any, api: API) {
+  if (item.type !== "component") return undefined;
+  const firstEntry = api.getData(item.children[0]) as { importPath?: string } | undefined;
+  const lastChanged =
+    firstEntry?.importPath && data?.components[firstEntry.importPath]?.lastChanged;
+  if (!lastChanged || Date.parse(lastChanged) <= lastVisit) return undefined;
+
+  return (
+    <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+      {item.name}
+      <ChangedDot title="Changed since your last visit" data-testid="changed-dot" />
+    </span>
+  );
+}
 
 function Panel() {
   const { storyId, index } = useStorybookState();
-  const data: ContributorsData | undefined = (window as any).__STORYBOOK_ADDON_CONTRIBUTORS__;
   const story = index?.[storyId] as { importPath: string; title: string } | undefined;
-  const contributors = story && data?.components[story.importPath]?.contributors;
+  const component = story && data?.components[story.importPath];
 
-  if (!story || !data || !contributors?.length) {
+  if (!story || !data || !component?.contributors.length) {
     return <Muted>No git history was found for this component.</Muted>;
   }
 
@@ -34,86 +73,263 @@ function Panel() {
   const updated = new Date(data.generatedAt).toLocaleDateString(undefined, { dateStyle: "medium" });
 
   return (
-    <div style={{ padding: "12px 16px" }}>
-      <strong>People who have worked on {componentName}</strong>
-      <ul style={{ listStyle: "none", margin: "8px 0", padding: 0 }}>
-        {contributors.map((contributor) => (
-          <Row key={contributor.gravatarHash}>
-            <Avatar contributor={contributor} />
-            <div>
-              <strong data-testid="contributor-name">{contributor.name}</strong>
-              <Muted as="div">
-                Worked on this in {contributor.commits}{" "}
-                {contributor.commits === 1 ? "change" : "changes"} · last active{" "}
-                <time
-                  dateTime={contributor.lastActive}
-                  title={new Date(contributor.lastActive).toDateString()}
-                >
-                  {timeAgo(contributor.lastActive)}
-                </time>
+    <Wrapper>
+      <Header>
+        <div>
+          <strong>People who have worked on {componentName}</strong>
+          <Muted as="div">
+            <UsedBy usedBy={component.usedBy} />
+            {component.sourceUrl && (
+              <>
+                {" · "}
+                <Link href={component.sourceUrl} target="_blank" rel="noreferrer">
+                  View source
+                </Link>
+              </>
+            )}
+          </Muted>
+        </div>
+        <Activity monthlyChanges={component.monthlyChanges} />
+      </Header>
+
+      <Columns>
+        <div>
+          <SectionTitle>People</SectionTitle>
+          {component.contributors.map((contributor) => (
+            <Person key={contributor.gravatarHash} contributor={contributor} />
+          ))}
+          <LaneScale>
+            <span>2 years ago</span>
+            <span>1 year</span>
+            <span>now</span>
+          </LaneScale>
+        </div>
+        <div>
+          <SectionTitle>Recent changes</SectionTitle>
+          {component.recentChanges.map((change) => (
+            <Row key={change.date} data-testid="recent-change">
+              <strong>{change.message}</strong>{" "}
+              {change.url && (
+                <Link href={change.url} target="_blank" rel="noreferrer">
+                  {change.url.includes("/pull/") ? `#${change.url.split("/").pop()}` : "commit"}
+                </Link>
+              )}
+              <Muted>
+                {change.author} · {timeAgo(change.date)}
               </Muted>
-            </div>
-          </Row>
-        ))}
-      </ul>
-      <Muted>Ordered by recent involvement · Updated {updated}</Muted>
+            </Row>
+          ))}
+          <Muted style={{ marginTop: 10 }}>Ordered by recent involvement · Updated {updated}</Muted>
+        </div>
+      </Columns>
+    </Wrapper>
+  );
+}
+
+function UsedBy({ usedBy }: { usedBy: ComponentContributors["usedBy"] }) {
+  const api = useStorybookApi();
+  if (usedBy.length === 0) return <>Not used by other components</>;
+
+  return (
+    <>
+      Used by{" "}
+      <Dropdown>
+        <summary data-testid="used-by">
+          {usedBy.length} {usedBy.length === 1 ? "component" : "components"} ▾
+        </summary>
+        <DropdownList>
+          {usedBy.map((user) => (
+            <li key={user.storyId}>
+              <DropdownItem onClick={() => api.selectStory(user.storyId)}>
+                {user.name}
+                <Link as="span">Open story →</Link>
+              </DropdownItem>
+            </li>
+          ))}
+        </DropdownList>
+      </Dropdown>
+    </>
+  );
+}
+
+function Activity({ monthlyChanges }: { monthlyChanges: number[] }) {
+  const recentCount = changesInLastThreeMonths(monthlyChanges);
+  const busiestMonth = Math.max(1, ...monthlyChanges);
+  const barWidth = 150 / monthlyChanges.length;
+
+  return (
+    <div style={{ marginLeft: "auto", textAlign: "right" }}>
+      <svg width="150" height="28" aria-hidden>
+        {monthlyChanges.map((count, month) => {
+          const height = count === 0 ? 2 : 6 + (count / busiestMonth) * 22;
+          return (
+            <rect
+              key={month}
+              x={month * barWidth + 1}
+              y={28 - height}
+              width={barWidth - 3}
+              height={height}
+              rx={1.5}
+              fill={count === 0 ? "#d5dde5" : "#029cfd"}
+            />
+          );
+        })}
+      </svg>
+      <Muted>
+        Changed {recentCount} {recentCount === 1 ? "time" : "times"} in the last 3 months
+      </Muted>
     </div>
   );
 }
 
-function Avatar({ contributor }: { contributor: Contributor }) {
-  const [failedToLoad, setFailedToLoad] = useState(false);
-  const style = { width: 40, height: 40, borderRadius: "50%", flexShrink: 0 };
-
-  if (failedToLoad) {
-    return <Initials style={style}>{initials(contributor.name)}</Initials>;
-  }
-
+function Person({ contributor }: { contributor: Contributor }) {
   return (
-    <img
-      src={`https://www.gravatar.com/avatar/${contributor.gravatarHash}?s=80&d=identicon`}
-      alt=""
-      style={style}
-      onError={() => setFailedToLoad(true)}
-    />
+    <PersonRow data-testid="contributor">
+      <Avatar name={contributor.name} gravatarHash={contributor.gravatarHash} size={36} />
+      <div>
+        <strong data-testid="contributor-name">{contributor.name}</strong>
+        <Muted>
+          {contributor.commits} {contributor.commits === 1 ? "change" : "changes"} · active{" "}
+          <time dateTime={contributor.lastActive}>{timeAgo(contributor.lastActive)}</time>
+        </Muted>
+        {contributor.inactiveSince && (
+          <InactiveTag data-testid="inactive">
+            Not active in this repo since {monthAndYear(contributor.inactiveSince)}
+          </InactiveTag>
+        )}
+      </div>
+      <Lane changes={contributor.changes} />
+    </PersonRow>
   );
 }
 
-function initials(name: string): string {
-  const words = name.split(/\s+/);
-  return words
-    .map((word) => word[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
+function Lane({ changes }: { changes: Contributor["changes"] }) {
+  return (
+    <svg width={LANE_WIDTH} height="24" role="img" aria-label="Changes over the last 2 years">
+      <rect x="0" y="11" width={LANE_WIDTH} height="2" fill="#e3e8ee" />
+      {changes.map((change) => {
+        const daysAgo = (Date.now() - Date.parse(change.date)) / DAY_MS;
+        const date = new Date(change.date).toLocaleDateString(undefined, { dateStyle: "medium" });
+        return (
+          <rect
+            key={change.date}
+            x={(1 - daysAgo / LANE_DAYS) * (LANE_WIDTH - 4)}
+            y="5"
+            width="3"
+            height="14"
+            rx="1.5"
+            fill="#029cfd"
+          >
+            <title>{`${change.message} · ${date}`}</title>
+          </rect>
+        );
+      })}
+    </svg>
+  );
 }
 
-function timeAgo(isoDate: string): string {
-  const days = Math.floor((Date.now() - Date.parse(isoDate)) / DAY_MS);
-  if (days < 1) return "today";
-  if (days < 14) return `${days} days ago`;
-  if (days < 60) return `${Math.round(days / 7)} weeks ago`;
-  if (days < 365) return `${Math.round(days / 30)} months ago`;
-  return `${Math.round((days / 365) * 10) / 10} years ago`;
-}
-
-const Muted = styled.p(({ theme }) => ({
-  color: theme.textMutedColor,
-  fontSize: theme.typography.size.s1,
-  margin: 0,
+const Wrapper = styled.div(({ theme }) => ({
+  padding: "12px 16px",
+  fontSize: theme.typography.size.s2,
+  color: theme.color.defaultText,
 }));
 
-const Row = styled.li(({ theme }) => ({
-  display: "flex",
-  alignItems: "center",
-  gap: 12,
+const Header = styled.div({ display: "flex", alignItems: "flex-start", gap: 16, marginBottom: 12 });
+
+const Columns = styled.div({ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 24 });
+
+const SectionTitle = styled.div(({ theme }) => ({
+  fontSize: theme.typography.size.s1,
+  fontWeight: theme.typography.weight.bold,
+  textTransform: "uppercase",
+  letterSpacing: "0.08em",
+  color: theme.textMutedColor,
+  marginBottom: 4,
+}));
+
+const Row = styled.div(({ theme }) => ({
   padding: "8px 0",
   borderBottom: `1px solid ${theme.appBorderColor}`,
 }));
 
-const Initials = styled.span(({ theme }) => ({
+const PersonRow = styled(Row)({
   display: "grid",
-  placeItems: "center",
-  fontWeight: "bold",
-  background: theme.background.hoverable,
+  gridTemplateColumns: `36px 1fr ${LANE_WIDTH}px`,
+  alignItems: "center",
+  gap: 12,
+});
+
+const LaneScale = styled.div(({ theme }) => ({
+  display: "flex",
+  justifyContent: "space-between",
+  width: LANE_WIDTH,
+  marginLeft: "auto",
+  paddingTop: 4,
+  fontSize: 10,
+  color: theme.textMutedColor,
 }));
+
+const Muted = styled.div(({ theme }) => ({
+  color: theme.textMutedColor,
+  fontSize: theme.typography.size.s1,
+}));
+
+const InactiveTag = styled.span({
+  display: "inline-block",
+  marginTop: 3,
+  padding: "1px 7px",
+  borderRadius: 10,
+  fontSize: 11,
+  color: "#9a6700",
+  background: "#fff4d6",
+});
+
+const Link = styled.a(({ theme }) => ({
+  color: theme.color.secondary,
+  textDecoration: "none",
+  fontWeight: "bold",
+}));
+
+const Dropdown = styled.details({
+  display: "inline-block",
+  position: "relative",
+  "& > summary": { display: "inline", cursor: "pointer", listStyle: "none", color: "#029cfd" },
+});
+
+const DropdownList = styled.ul(({ theme }) => ({
+  position: "absolute",
+  zIndex: 10,
+  top: 22,
+  left: 0,
+  minWidth: 240,
+  margin: 0,
+  padding: "6px 0",
+  listStyle: "none",
+  background: theme.background.content,
+  border: `1px solid ${theme.appBorderColor}`,
+  borderRadius: 8,
+  boxShadow: "0 8px 24px rgba(0, 0, 0, 0.12)",
+}));
+
+const DropdownItem = styled.button(({ theme }) => ({
+  display: "flex",
+  justifyContent: "space-between",
+  gap: 16,
+  width: "100%",
+  padding: "5px 12px",
+  border: 0,
+  background: "none",
+  color: theme.color.defaultText,
+  font: "inherit",
+  textAlign: "left",
+  cursor: "pointer",
+  "&:hover": { background: theme.background.hoverable },
+}));
+
+const ChangedDot = styled.span({
+  width: 7,
+  height: 7,
+  borderRadius: "50%",
+  background: "#f0506e",
+  flexShrink: 0,
+});

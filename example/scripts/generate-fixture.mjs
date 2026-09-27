@@ -10,6 +10,13 @@ import {
 
 const FIXTURE_DIR = new URL("../fixture/", import.meta.url).pathname;
 const DAY_MS = 24 * 60 * 60 * 1000;
+const EDIT_MESSAGES = [
+  (component) => `Fix spacing in ${component}`,
+  (component) => `Improve ${component} accessibility`,
+  (component) => `Refine ${component} styles`,
+  (component) => `Handle long labels in ${component}`,
+  (component) => `Tidy up ${component}`,
+];
 
 const history = [
   ...commits("Ivan Petrov", "README.md", [800], "docs"),
@@ -37,17 +44,24 @@ const history = [
   ...commits("Omar Farouk", "Dialog", [40, 30, 25, 15, 10]),
 
   ...commits("Dana Whitfield", "Badge", [10, 4]),
+
+  ...commits("Kai Nakamura", "ProductTile", [3], "composite"),
+  ...commits("Kai Nakamura", "CheckoutSummary", [2], "composite"),
 ].sort((left, right) => right.daysAgo - left.daysAgo);
 
 rmSync(FIXTURE_DIR, { recursive: true, force: true });
 mkdirSync(FIXTURE_DIR);
 git(["init", "-q", "-b", "main"]);
 git(["config", "commit.gpgsign", "false"]);
+git(["remote", "add", "origin", "https://github.com/acme/design-system.git"]);
 
+let pullRequestNumber = 100;
 for (const commit of history) {
   if (commit.kind === "merge") git(["checkout", "-q", "-b", "feature"]);
 
-  const message = applyChange(commit);
+  pullRequestNumber += 1;
+  const change = applyChange(commit, pullRequestNumber);
+  const message = commit.author.endsWith("[bot]") ? change : `${change} (#${pullRequestNumber})`;
   git(["add", "-A"]);
   git(["commit", "-q", "-m", message], identity(commit.author, commit.daysAgo));
 
@@ -69,34 +83,40 @@ function commits(author, target, daysAgoList, kind = "edit") {
   return daysAgoList.map((daysAgo) => ({ author, target, daysAgo, kind }));
 }
 
-function applyChange({ author, target, kind }) {
+function applyChange({ author, target, kind }, pullRequestNumber) {
   const componentFile = `${FIXTURE_DIR}src/${target}/${target}.tsx`;
   const storyFile = `${FIXTURE_DIR}src/${target}/${target}.stories.tsx`;
 
   switch (kind) {
     case "docs":
       appendFileSync(FIXTURE_DIR + target, `Updated by ${author}\n`);
-      return `docs: update ${target}`;
+      return `Update ${target}`;
     case "story":
       appendFileSync(storyFile, `// story tweak by ${author}\n`);
-      return `docs: tweak ${target} story`;
+      return `Add examples to ${target} stories`;
     case "reformat":
       reformatAllFiles();
-      return "style: reformat entire codebase";
+      return "Reformat codebase with new quote style";
     case "rewrite":
       writeFileSync(componentFile, rewrittenComponentSource(target));
-      return `refactor: rewrite ${target}`;
+      return `Rewrite ${target}`;
+    case "composite":
+      mkdirSync(`${FIXTURE_DIR}src/${target}`, { recursive: true });
+      writeFileSync(componentFile, compositeComponentSource(target));
+      writeFileSync(storyFile, storySource(target));
+      return `Add ${target} component`;
   }
 
-  if (existsSync(componentFile)) {
-    appendFileSync(componentFile, `// change by ${author}\n`);
-    return `update ${target}`;
+  if (!existsSync(componentFile)) {
+    mkdirSync(`${FIXTURE_DIR}src/${target}`, { recursive: true });
+    writeFileSync(componentFile, componentSource(target));
+    writeFileSync(storyFile, storySource(target));
+    return `Add ${target} component`;
   }
 
-  mkdirSync(`${FIXTURE_DIR}src/${target}`, { recursive: true });
-  writeFileSync(componentFile, componentSource(target));
-  writeFileSync(storyFile, storySource(target));
-  return `feat: add ${target}`;
+  appendFileSync(componentFile, `// change by ${author}\n`);
+  if (author.endsWith("[bot]")) return `chore(${target}): apply automated fixes`;
+  return EDIT_MESSAGES[pullRequestNumber % EDIT_MESSAGES.length](target);
 }
 
 function reformatAllFiles() {
@@ -112,6 +132,23 @@ function componentSource(name) {
 
 export const ${name} = ({ label = "${name}" }: { label?: string }) => (
   <div style={{ padding: 8, border: "1px solid #ccc", borderRadius: 4 }}>{label}</div>
+);
+`;
+}
+
+function compositeComponentSource(name) {
+  return `import React from "react";
+
+import { Badge } from "../Badge/Badge";
+import { Button } from "../Button/Button";
+import { Card } from "../Card/Card";
+
+export const ${name} = () => (
+  <div>
+    <Card label="${name}" />
+    <Badge label="New" />
+    <Button label="Continue" />
+  </div>
 );
 `;
 }

@@ -51,6 +51,50 @@ it.each(scenarios)("panel for $component ($scenario)", async (scenario) => {
   await page.close();
 });
 
+it("shows recent changes, usage, and inactive people", async () => {
+  const page = await browser.newPage();
+  await page.goto(`http://localhost:${PORT}/?path=/story/scenarios-card--default`);
+  await page.getByRole("tab", { name: "Contributors" }).click();
+
+  expect(await page.getByTestId("recent-change").first().textContent()).toContain("Ben Okafor");
+  expect(await page.getByTestId("inactive").textContent()).toContain(
+    "Not active in this repo since",
+  );
+
+  await page.getByTestId("used-by").click();
+  await page
+    .locator("details[open]")
+    .getByRole("button", { name: /ProductTile/ })
+    .click();
+  await page.waitForURL(/scenarios-producttile--default/);
+
+  await page.close();
+});
+
+it("marks components changed since the last visit in the sidebar", async () => {
+  const page = await browser.newPage();
+  await page.goto(`http://localhost:${PORT}/?path=/story/scenarios-card--default`);
+  await page.getByTestId("changed-dot").first().waitFor();
+  await page.close();
+});
+
+it("shows the people on the docs page and links to the panel", async () => {
+  const page = await browser.newPage();
+  await page.goto(`http://localhost:${PORT}/?path=/docs/scenarios-card--docs`);
+  const block = page
+    .frameLocator("#storybook-preview-iframe")
+    .getByTestId("contributors-docs-block");
+  expect(await block.textContent()).toContain(
+    "Ben Okafor, Alice Chen and Sam Rivera have worked on this",
+  );
+
+  await block.getByRole("button", { name: /See people and recent changes/ }).click();
+  await page.waitForURL(/scenarios-card--default/);
+  expect(await page.getByTestId("contributor-name").first().textContent()).toBe("Ben Okafor");
+
+  await page.close();
+});
+
 it("built output contains no author emails", () => {
   const log = execFileSync("git", ["log", "--format=%ae"], {
     cwd: `${EXAMPLE_DIR}fixture`,

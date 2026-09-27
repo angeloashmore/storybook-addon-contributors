@@ -54,3 +54,38 @@ it("skips bots, merge commits, and story-only edits", () => {
 it("never includes email addresses", () => {
   expect(JSON.stringify(data)).not.toContain("@");
 });
+
+it("lists components that import this one", () => {
+  const usedBy = data.components[storyImportPath("Card")].usedBy.map((user) => user.name).sort();
+  expect(usedBy).toEqual(["CheckoutSummary", "ProductTile"]);
+  expect(data.components[storyImportPath("Input")].usedBy).toEqual([]);
+});
+
+it("lists recent changes with pull request links", () => {
+  const [latest] = data.components[storyImportPath("Card")].recentChanges;
+  expect(latest.author).toBe("Ben Okafor");
+  expect(latest.message).not.toMatch(/\(#\d+\)/);
+  expect(latest.url).toMatch(/^https:\/\/github\.com\/acme\/design-system\/pull\/\d+$/);
+});
+
+it("links to the component source", () => {
+  expect(data.components[storyImportPath("Card")].sourceUrl).toBe(
+    "https://github.com/acme/design-system/blob/HEAD/src/Card/Card.tsx",
+  );
+});
+
+it("marks people who are no longer active in the repository", () => {
+  const card = data.components[storyImportPath("Card")].contributors;
+  expect(
+    card.find((contributor) => contributor.name === "Alice Chen")?.inactiveSince,
+  ).toBeDefined();
+  expect(
+    card.find((contributor) => contributor.name === "Ben Okafor")?.inactiveSince,
+  ).toBeUndefined();
+});
+
+it("counts changes per month", () => {
+  const { monthlyChanges } = data.components[storyImportPath("Card")];
+  expect(monthlyChanges).toHaveLength(12);
+  expect(monthlyChanges.slice(-3).reduce((total, count) => total + count, 0)).toBe(3);
+});
