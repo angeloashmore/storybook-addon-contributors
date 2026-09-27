@@ -81,9 +81,7 @@ it("marks components changed in the last week in the sidebar", async () => {
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, { steps: 5 });
   const tooltip = page.getByRole("tooltip");
   await tooltip.waitFor();
-  expect(await tooltip.textContent()).toBe(
-    "Changed 4 days ago by Dana Whitfield: Handle long labels in Badge",
-  );
+  expect(await tooltip.textContent()).toBe("Changed 4 days ago");
 
   await page.close();
 });

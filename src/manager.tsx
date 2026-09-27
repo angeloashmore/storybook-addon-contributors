@@ -55,7 +55,7 @@ function sidebarLabel(item: any, api: API) {
     return undefined;
   }
 
-  const note = `Changed ${timeAgo(latestChange.date)} by ${latestChange.author}: ${latestChange.message}`;
+  const note = `Changed ${timeAgo(latestChange.date)}`;
   return (
     <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
       {item.name}
