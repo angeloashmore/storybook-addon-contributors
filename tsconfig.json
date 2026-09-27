@@ -9,5 +9,5 @@
     "skipLibCheck": true,
     "allowImportingTsExtensions": true
   },
-  "include": ["src", "tests", "evals", "example/.storybook"]
+  "include": ["src", "tests", "example/.storybook"]
 }
