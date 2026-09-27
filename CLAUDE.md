@@ -18,14 +18,21 @@ component, so designers, PMs, QA and new engineers can find someone to ask, with
 - POC: no shallow clones, .mailmap, monorepo quirks or deployment handling.
 
 ## Layout
-- `packages/addon`: the addon. `src/collect.ts` (git + ranking), `src/preset.ts` (managerHead injects data), `src/manager.tsx` (panel).
-- `example`: Storybook (React + Vite) using the addon. `scripts/generate-fixture.mjs` builds `example/fixture`, a separate gitignored git repo with scripted history. `expected.json` holds the expected answers per scenario.
-- `tests`: Vitest integration test (`integration.test.ts`) and Playwright e2e test (`e2e.test.ts`).
-- `evals`: agent vs addon comparison (`run.ts`, Claude Agent SDK).
+- `packages/addon`: the addon, loaded from source with no build step.
+  - `preset.ts`: Node side. Runs git, ranks people, and injects the data into the manager via `managerHead`.
+  - `manager.tsx`: the panel.
+- `example`: Storybook (React + Vite) using the addon. `scripts/generate-fixture.mjs` builds `example/fixture`, a separate gitignored git repo with scripted history. `expected.json` holds the expected answers per scenario, written from intent.
+- `tests`: Vitest integration test (collector on Storybook's real index) and e2e test (static build + Playwright).
+- `evals/run.ts`: addon vs agent comparison (Claude Agent SDK, read-only tools, run in a temp clone).
 
 ## Commands
 - `pnpm install`
-- `pnpm dev`: build the addon, generate the fixture, start Storybook on :6006
-- `pnpm build`: the same, but builds a static Storybook to `example/storybook-static`
-- `pnpm test`: integration + e2e (set `CHROMIUM_PATH` to use a preinstalled Chromium; otherwise run `npx playwright install chromium`)
-- `pnpm evals`: needs `ANTHROPIC_API_KEY`; `EVAL_MODEL`, `EVAL_RUNS`, `EVAL_CONCURRENCY` are optional
+- `pnpm dev`: generate the fixture and start Storybook on :6006
+- `pnpm build`: generate the fixture and build static Storybook to `example/storybook-static`
+- `pnpm test`: integration + e2e. Set `CHROMIUM_PATH` to use a preinstalled Chromium; otherwise run `npx playwright install chromium`.
+- `pnpm typecheck`
+- `pnpm evals`: needs `ANTHROPIC_API_KEY`. `EVAL_MODEL`, `EVAL_RUNS` (default 3) and `EVAL_CONCURRENCY` are optional. Results go to `evals/results/`.
+
+## Gotchas
+- The addon is TypeScript loaded directly (Node type stripping for the preset, Storybook's esbuild for the manager). Keep to erasable TS syntax and use `.ts` extensions in relative imports that Node loads.
+- The manager bundle must not include its own React runtime; Storybook compiles manager TSX with classic `React.createElement`.

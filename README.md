@@ -19,7 +19,7 @@ Note that a hash of a guessable email can still be matched by someone who guesse
 pnpm install
 pnpm dev     # fixture repo + Storybook on :6006
 pnpm build   # static build in example/storybook-static
-pnpm test    # integration + e2e
+pnpm test    # integration + e2e (CHROMIUM_PATH=... to reuse a browser)
 pnpm evals   # addon vs agent (needs ANTHROPIC_API_KEY)
 ```
 

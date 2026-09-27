@@ -5,9 +5,9 @@
     "moduleResolution": "Bundler",
     "jsx": "react",
     "strict": true,
-    "skipLibCheck": true,
     "noEmit": true,
-    "types": ["node"]
+    "skipLibCheck": true,
+    "allowImportingTsExtensions": true
   },
-  "include": ["src"]
+  "include": ["packages", "tests", "evals", "example/.storybook"]
 }

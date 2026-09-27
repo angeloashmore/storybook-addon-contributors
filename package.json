@@ -1,14 +1,22 @@
 {
-  "name": "component-contributors-workspace",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@10.33.0",
   "scripts": {
-    "build:addon": "pnpm --filter storybook-addon-component-contributors build",
     "fixture": "node example/scripts/generate-fixture.mjs",
-    "dev": "pnpm build:addon && pnpm fixture && pnpm --filter example storybook",
-    "build": "pnpm build:addon && pnpm fixture && pnpm --filter example build-storybook",
-    "test": "pnpm build:addon && pnpm --filter tests exec vitest run",
-    "evals": "pnpm build:addon && pnpm --filter evals exec tsx run.ts"
+    "dev": "pnpm fixture && pnpm --filter example exec storybook dev -p 6006",
+    "build": "pnpm fixture && pnpm --filter example exec storybook build -o storybook-static",
+    "test": "vitest run",
+    "typecheck": "tsc",
+    "evals": "node evals/run.ts"
+  },
+  "devDependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.3.283",
+    "@types/node": "^22",
+    "@types/react": "^19.3.0",
+    "playwright": "1.56.1",
+    "storybook": "10.6.0",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.2"
   }
 }
