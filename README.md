@@ -14,7 +14,7 @@ You also get:
 - Which components changed in the last week, marked in the sidebar
 - The same people on the component's Docs page
 
-![The Contributors panel in Storybook, listing the people who worked on a Card component, most relevant first](https://github.com/user-attachments/assets/819c90e9-ed76-4ce9-bc5d-7f333914b908)
+![The Contributors panel in Storybook, listing the people who worked on a Card component with their recent activity and changes](https://github.com/user-attachments/assets/db8abb95-227e-4b3a-8622-bc186e4eaa19)
 
 ## Install
 
