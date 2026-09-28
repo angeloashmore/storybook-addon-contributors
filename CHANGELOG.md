@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/angeloashmore/storybook-addon-contributors/compare/v0.2.0...v0.2.1) (2026-09-28)
+
+
+### Bug Fixes
+
+* fit the panel and docs block to narrow spaces like the right-side panel ([#13](https://github.com/angeloashmore/storybook-addon-contributors/issues/13)) ([1375ac1](https://github.com/angeloashmore/storybook-addon-contributors/commit/1375ac13af94e475bc558f5649b40b71ce86bd28))
+
 ## [0.2.0](https://github.com/angeloashmore/storybook-addon-contributors/compare/v0.1.0...v0.2.0) (2026-09-28)
 
 
