@@ -1,0 +1,19 @@
+{
+  "name": "example",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "fixture": "node scripts/generate-fixture.mjs",
+    "storybook": "npm run fixture && storybook dev -p 6006",
+    "build-storybook": "npm run fixture && storybook build -o storybook-static"
+  },
+  "dependencies": {
+    "@storybook/addon-docs": "10.6.0",
+    "@storybook/react-vite": "10.6.0",
+    "react": "^19",
+    "react-dom": "^19",
+    "storybook": "10.6.0",
+    "storybook-addon-contributors": "file:..",
+    "vite": "^7.0.0"
+  }
+}
