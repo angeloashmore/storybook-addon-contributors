@@ -186,7 +186,7 @@ function Lane({ changes }: { changes: Contributor["changes"] }) {
               href={change.url}
               target="_blank"
               rel="noreferrer"
-              style={{ left: (1 - daysSince(change.date) / LANE_DAYS) * (LANE_WIDTH - 9) }}
+              style={{ left: (1 - daysSince(change.date) / LANE_DAYS) * (LANE_WIDTH - 13) }}
             />
           </TooltipProvider>
         );
@@ -267,19 +267,19 @@ const LaneTrack = styled.div({
 const Tick = styled.a({
   position: "absolute",
   top: 0,
-  width: 9,
+  width: 13,
   height: 24,
   "&::after": {
     content: '""',
     position: "absolute",
-    left: 3,
+    left: 5,
     top: 5,
     width: 3,
     height: 14,
     borderRadius: 1.5,
     background: "#029cfd",
   },
-  "&:hover::after, &:focus-visible::after": { background: "#0070c0", left: 2, width: 5 },
+  "&:hover::after, &:focus-visible::after": { background: "#0070c0", top: 1, height: 22 },
 });
 
 const ChangedDot = styled.span({
