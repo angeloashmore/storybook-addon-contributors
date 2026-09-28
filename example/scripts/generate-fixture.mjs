@@ -44,9 +44,6 @@ const history = [
   ...commits("Omar Farouk", "Dialog", [40, 30, 25, 15, 10]),
 
   ...commits("Dana Whitfield", "Badge", [10, 4]),
-
-  ...commits("Kai Nakamura", "ProductTile", [3], "composite"),
-  ...commits("Kai Nakamura", "CheckoutSummary", [2], "composite"),
 ].sort((left, right) => right.daysAgo - left.daysAgo);
 
 rmSync(FIXTURE_DIR, { recursive: true, force: true });
@@ -103,8 +100,6 @@ function applyChange({ author, target, kind }, pullRequestNumber) {
     case "revise":
       appendFileSync(componentFile, revisionSource(target, pullRequestNumber));
       return `Add spacing presets to ${target}`;
-    case "composite":
-      return createComponent(target, compositeComponentSource(target));
   }
 
   if (!existsSync(componentFile)) return createComponent(target, componentSource(target));
@@ -184,23 +179,6 @@ export const Card = ({
       {linkLabel}
     </a>
   </article>
-);
-`;
-}
-
-function compositeComponentSource(name) {
-  return `import React from "react";
-
-import { Badge } from "../Badge/Badge";
-import { Button } from "../Button/Button";
-import { Card } from "../Card/Card";
-
-export const ${name} = () => (
-  <div>
-    <Card title="${name}" />
-    <Badge label="New" />
-    <Button label="Continue" />
-  </div>
 );
 `;
 }
