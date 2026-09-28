@@ -1,6 +1,6 @@
 {
   "name": "storybook-addon-contributors",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Find the right person to talk to about a component without leaving Storybook",
   "keywords": [
     "contributors",
