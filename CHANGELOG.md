@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/angeloashmore/storybook-addon-contributors/compare/v0.2.1...v0.2.2) (2026-09-28)
+
+
+### Bug Fixes
+
+* use the visible timeline tick as its own hover target ([#15](https://github.com/angeloashmore/storybook-addon-contributors/issues/15)) ([2746e97](https://github.com/angeloashmore/storybook-addon-contributors/commit/2746e974418fd0570bdf3a413252b98566e13e53))
+
 ## [0.2.1](https://github.com/angeloashmore/storybook-addon-contributors/compare/v0.2.0...v0.2.1) (2026-09-28)
 
 
