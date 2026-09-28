@@ -1,6 +1,5 @@
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { readFileSync, statSync } from "node:fs";
 import { dirname, relative, resolve } from "node:path";
 
 const HALF_LIFE_DAYS = 182;
@@ -32,25 +31,16 @@ export type Contributor = {
 
 export type ComponentContributors = {
   files: string[];
-  sourceUrl?: string;
   monthlyChanges: number[];
   recentChanges: Change[];
-  usedBy: { name: string; storyId: string }[];
   contributors: Contributor[];
 };
 
 export type ContributorsData = {
-  generatedAt: string;
   components: Record<string, ComponentContributors>;
 };
 
-type StoryIndexEntry = {
-  id: string;
-  type: string;
-  title: string;
-  importPath: string;
-  componentPath?: string;
-};
+type StoryIndexEntry = { type: string; importPath: string; componentPath?: string };
 
 type Commit = {
   sha: string;
@@ -61,7 +51,7 @@ type Commit = {
   changedLines: number;
 };
 
-type Repository = { root: string; url?: string; lastActiveByEmail: Map<string, number> };
+type Repository = { url?: string; lastActiveByEmail: Map<string, number> };
 
 let cachedData: Promise<ContributorsData> | undefined;
 
@@ -81,37 +71,15 @@ async function injectData(head = "", options: any): Promise<string> {
 }
 
 export function collectContributors(entries: Record<string, StoryIndexEntry>): ContributorsData {
-  const firstStoryByImportPath = new Map<string, StoryIndexEntry>();
-  for (const entry of Object.values(entries)) {
-    if (entry.type === "story" && !firstStoryByImportPath.has(entry.importPath)) {
-      firstStoryByImportPath.set(entry.importPath, entry);
-    }
-  }
-
   const repositories = new Map<string, Repository>();
   const components: ContributorsData["components"] = {};
-  const importPathByComponentFile = new Map<string, string>();
-  for (const [importPath, story] of firstStoryByImportPath) {
-    const pathspec = componentPathspec(story);
+  for (const entry of Object.values(entries)) {
+    if (entry.type !== "story" || components[entry.importPath]) continue;
+    const pathspec = componentPathspec(entry);
     const repository = findRepository(dirname(pathspec[0]), repositories);
-    components[importPath] = describeComponent(pathspec, repository);
-    if (story.componentPath) importPathByComponentFile.set(pathspec[0], importPath);
+    components[entry.importPath] = describeComponent(pathspec, repository);
   }
-
-  for (const importer of firstStoryByImportPath.values()) {
-    if (!importer.componentPath) continue;
-    for (const importedFile of relativeImports(resolve(importer.componentPath))) {
-      const importedPath = importPathByComponentFile.get(importedFile);
-      if (importedPath && importedPath !== importer.importPath) {
-        components[importedPath].usedBy.push({
-          name: importer.title.split("/").pop()!,
-          storyId: importer.id,
-        });
-      }
-    }
-  }
-
-  return { generatedAt: new Date().toISOString(), components };
+  return { components };
 }
 
 function componentPathspec(story: StoryIndexEntry): string[] {
@@ -133,7 +101,7 @@ function findRepository(cwd: string, repositories: Map<string, Repository>): Rep
   }
 
   const remote = git(cwd, ["remote", "get-url", "origin"]).trim();
-  const repository = { root, url: remote ? webUrl(remote) : undefined, lastActiveByEmail };
+  const repository = { url: remote ? webUrl(remote) : undefined, lastActiveByEmail };
   repositories.set(root, repository);
   return repository;
 }
@@ -150,13 +118,10 @@ function describeComponent(pathspec: string[], repository: Repository): Componen
 
   return {
     files: [relative(process.cwd(), pathspec[0])],
-    sourceUrl:
-      repository.url && `${repository.url}/blob/HEAD/${relative(repository.root, pathspec[0])}`,
     monthlyChanges: countChangesPerMonth(commits),
     recentChanges: commits
       .slice(0, RECENT_CHANGE_COUNT)
       .map((commit) => describeChange(commit, repository)),
-    usedBy: [],
     contributors: rankContributors(commits, pathspec, repository),
   };
 }
@@ -276,23 +241,6 @@ function countAuthoredLines(pathspec: string[]): Map<string, number> {
     }
   }
   return linesByEmail;
-}
-
-function relativeImports(file: string): string[] {
-  const source = readFileSync(file, "utf8");
-  const imports: string[] = [];
-  for (const [, specifier] of source.matchAll(/from\s+["'](\.{1,2}\/[^"']+)["']/g)) {
-    const base = resolve(dirname(file), specifier);
-    const candidates = [".tsx", ".ts", ".jsx", ".js"].flatMap((extension) => [
-      base + extension,
-      `${base}/index${extension}`,
-    ]);
-    const match = [base, ...candidates].find((candidate) =>
-      statSync(candidate, { throwIfNoEntry: false })?.isFile(),
-    );
-    if (match) imports.push(match);
-  }
-  return imports;
 }
 
 function recencyWeight(time: number): number {

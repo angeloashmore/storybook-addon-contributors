@@ -47,7 +47,7 @@ it.each(scenarios)("panel for $component ($scenario)", async (scenario) => {
   await page.close();
 });
 
-it("shows recent changes, usage, and inactive people", async () => {
+it("shows recent changes and inactive people", async () => {
   const page = await browser.newPage();
   await page.goto(`http://localhost:${PORT}/?path=/story/scenarios-card--default`);
   await page.getByRole("tab", { name: "Contributors" }).click();
@@ -56,13 +56,6 @@ it("shows recent changes, usage, and inactive people", async () => {
   expect(await page.getByTestId("inactive").textContent()).toContain(
     "Not active in this repo since",
   );
-
-  await page.getByTestId("used-by").click();
-  await page
-    .locator("details[open]")
-    .getByRole("button", { name: /ProductTile/ })
-    .click();
-  await page.waitForURL(/scenarios-producttile--default/);
 
   await page.close();
 });

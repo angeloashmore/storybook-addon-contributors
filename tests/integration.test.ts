@@ -55,23 +55,11 @@ it("never includes email addresses", () => {
   expect(JSON.stringify(data)).not.toContain("@");
 });
 
-it("lists components that import this one", () => {
-  const usedBy = data.components[storyImportPath("Card")].usedBy.map((user) => user.name).sort();
-  expect(usedBy).toEqual(["CheckoutSummary", "ProductTile"]);
-  expect(data.components[storyImportPath("Input")].usedBy).toEqual([]);
-});
-
 it("lists recent changes with pull request links", () => {
   const [latest] = data.components[storyImportPath("Card")].recentChanges;
   expect(latest.author).toBe("Ben Okafor");
   expect(latest.message).not.toMatch(/\(#\d+\)/);
   expect(latest.url).toBe(`https://github.com/acme/design-system/pull/${latest.pullRequest}`);
-});
-
-it("links to the component source", () => {
-  expect(data.components[storyImportPath("Card")].sourceUrl).toBe(
-    "https://github.com/acme/design-system/blob/HEAD/src/Card/Card.tsx",
-  );
 });
 
 it("marks people who are no longer active in the repository", () => {

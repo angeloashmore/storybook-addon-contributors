@@ -9,7 +9,6 @@ repository's history when Storybook is built.
 
 You also get:
 
-- Which other components use each component, with links to their stories
 - Recent changes, linked to their pull requests
 - Who is no longer active in the repository
 - Which components changed in the last week, marked in the sidebar

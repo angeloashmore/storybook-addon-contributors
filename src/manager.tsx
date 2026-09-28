@@ -1,9 +1,9 @@
 import React from "react";
 import { AddonPanel, TooltipNote, TooltipProvider } from "storybook/internal/components";
-import { addons, types, useStorybookApi, useStorybookState, type API } from "storybook/manager-api";
+import { addons, types, useStorybookState, type API } from "storybook/manager-api";
 import { styled } from "storybook/theming";
 
-import type { ComponentContributors, Contributor } from "./preset";
+import type { Contributor } from "./preset";
 import {
   ADDON_ID,
   Avatar,
@@ -78,17 +78,7 @@ function Panel() {
       <Header>
         <div>
           <strong>People who have worked on {componentName}</strong>
-          <Muted>
-            <UsedBy usedBy={component.usedBy} />
-            {component.sourceUrl && (
-              <>
-                {" · "}
-                <Link href={component.sourceUrl} target="_blank" rel="noreferrer">
-                  View source
-                </Link>
-              </>
-            )}
-          </Muted>
+          <Muted>Ordered by recent involvement</Muted>
         </div>
         <Activity monthlyChanges={component.monthlyChanges} />
       </Header>
@@ -120,38 +110,9 @@ function Panel() {
               </Muted>
             </Row>
           ))}
-          <Muted style={{ marginTop: 10 }}>
-            Ordered by recent involvement · Updated {formatDate(data.generatedAt)}
-          </Muted>
         </div>
       </Columns>
     </Wrapper>
-  );
-}
-
-function UsedBy({ usedBy }: { usedBy: ComponentContributors["usedBy"] }) {
-  const api = useStorybookApi();
-  if (usedBy.length === 0) return <>Not used by other components</>;
-
-  return (
-    <>
-      Used by{" "}
-      <Dropdown>
-        <summary data-testid="used-by">
-          {usedBy.length} {usedBy.length === 1 ? "component" : "components"} ▾
-        </summary>
-        <DropdownList>
-          {usedBy.map((user) => (
-            <li key={user.storyId}>
-              <DropdownItem onClick={() => api.selectStory(user.storyId)}>
-                {user.name}
-                <Link as="span">Open story →</Link>
-              </DropdownItem>
-            </li>
-          ))}
-        </DropdownList>
-      </Dropdown>
-    </>
   );
 }
 
@@ -289,42 +250,6 @@ const Link = styled.a(({ theme }) => ({
   color: theme.color.secondary,
   textDecoration: "none",
   fontWeight: "bold",
-}));
-
-const Dropdown = styled.details({
-  display: "inline-block",
-  position: "relative",
-  "& > summary": { display: "inline", cursor: "pointer", listStyle: "none", color: "#029cfd" },
-});
-
-const DropdownList = styled.ul(({ theme }) => ({
-  position: "absolute",
-  zIndex: 10,
-  top: 22,
-  left: 0,
-  minWidth: 240,
-  margin: 0,
-  padding: "6px 0",
-  listStyle: "none",
-  background: theme.background.content,
-  border: `1px solid ${theme.appBorderColor}`,
-  borderRadius: 8,
-  boxShadow: "0 8px 24px rgba(0, 0, 0, 0.12)",
-}));
-
-const DropdownItem = styled.button(({ theme }) => ({
-  display: "flex",
-  justifyContent: "space-between",
-  gap: 16,
-  width: "100%",
-  padding: "5px 12px",
-  border: 0,
-  background: "none",
-  color: theme.color.defaultText,
-  font: "inherit",
-  textAlign: "left",
-  cursor: "pointer",
-  "&:hover": { background: theme.background.hoverable },
 }));
 
 const ChangedDot = styled.span({
