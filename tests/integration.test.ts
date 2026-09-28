@@ -66,6 +66,14 @@ it("lists recent changes with pull request links", () => {
   expect(latest.url).toBe(`https://github.com/acme/design-system/pull/${latest.pullRequest}`);
 });
 
+it("links each person's changes to their pull request or commit", () => {
+  const [ben] = data[storyImportPath("Card")].contributors;
+  expect(ben.changes.length).toBeGreaterThan(0);
+  for (const change of ben.changes) {
+    expect(change.url).toMatch(/^https:\/\/github\.com\/acme\/design-system\/(pull|commit)\//);
+  }
+});
+
 it("marks people who are no longer active in the repository", () => {
   const card = data[storyImportPath("Card")].contributors;
   expect(

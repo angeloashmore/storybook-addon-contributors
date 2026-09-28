@@ -26,7 +26,7 @@ export type Contributor = {
   score: number;
   lastActive: string;
   inactiveSince?: string;
-  changes: { date: string; message: string }[];
+  changes: Change[];
 };
 
 export type ComponentContributors = {
@@ -210,7 +210,7 @@ function rankContributors(
       inactiveSince: isInactive ? new Date(lastActiveInRepository).toISOString() : undefined,
       changes: personCommits
         .filter((commit) => daysAgo(commit.time) <= LANE_DAYS)
-        .map((commit) => ({ date: new Date(commit.time).toISOString(), message: commit.message })),
+        .map((commit) => describeChange(commit, repository)),
     };
   });
 
