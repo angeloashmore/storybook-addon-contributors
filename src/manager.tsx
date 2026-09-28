@@ -217,6 +217,7 @@ const Header = styled.div({
   alignItems: "flex-start",
   gap: 16,
   marginBottom: 12,
+  [NARROW]: { gap: 8, marginBottom: 20 },
 });
 
 const ActivityBox = styled.div({
@@ -244,6 +245,7 @@ const SectionTitle = styled.div(({ theme }) => ({
 const Row = styled.div(({ theme }) => ({
   padding: "8px 0",
   borderBottom: `1px solid ${theme.appBorderColor}`,
+  [NARROW]: { padding: "6px 0", borderBottom: "none" },
 }));
 
 const PersonRow = styled(Row)({
@@ -251,7 +253,12 @@ const PersonRow = styled(Row)({
   gridTemplateColumns: `36px 1fr ${LANE_WIDTH}px`,
   alignItems: "center",
   gap: 12,
-  [VERY_NARROW]: { gridTemplateColumns: "36px 1fr", "& > :last-child": { gridColumn: 2 } },
+  [VERY_NARROW]: {
+    gridTemplateColumns: "36px 1fr",
+    alignItems: "start",
+    rowGap: 2,
+    "& > :last-child": { gridColumn: 2 },
+  },
 });
 
 const LaneScale = styled.div(({ theme }) => ({
