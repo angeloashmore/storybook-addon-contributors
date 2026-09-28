@@ -35,13 +35,27 @@ export default {
 
 ## Deploying
 
-The list is built from your git history when Storybook builds, so the deployed site doesn't need the
-repository. Most hosts clone only recent commits, which would leave out older contributors, so fetch
-the full history in your build command:
+How it works:
 
-```sh
-git fetch --unshallow || true && npm run build-storybook
-```
+- The contributor list is built from your git history when Storybook builds.
+- The deployed Storybook is a static site. It doesn't need the repository, a server, or any tokens.
+- The build needs the **full** git history. Most hosts clone only the latest commits, which leaves
+  older contributors out of the list.
 
-On Vercel, set the environment variable `VERCEL_DEEP_CLONE=true` instead. On GitHub Actions (for
-example, when publishing to Chromatic or GitHub Pages), set `fetch-depth: 0` on `actions/checkout`.
+Fetch the full history before building:
+
+- **Vercel:** set the environment variable `VERCEL_DEEP_CLONE=true`.
+- **GitHub Actions** (for example, publishing to Chromatic or GitHub Pages): set `fetch-depth: 0` on
+  the checkout step.
+
+  ```yaml
+  - uses: actions/checkout@v4
+    with:
+      fetch-depth: 0
+  ```
+
+- **Any other host or CI:** use this build command.
+
+  ```sh
+  git fetch --unshallow || true && npm run build-storybook
+  ```
