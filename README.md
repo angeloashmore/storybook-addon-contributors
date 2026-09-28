@@ -2,6 +2,8 @@
 
 Find the right person to talk to about a component without leaving Storybook.
 
+**[Live demo](https://angeloashmore.github.io/storybook-addon-contributors/)**
+
 The **Contributors** panel lists the people who have worked on the component a story shows, most
 relevant first. Use it to find someone to ask a question, request a review from, or get an update
 from. You don't need git or any accounts: recent work counts most, and the list comes from your
