@@ -48,7 +48,7 @@ function sidebarLabel(item: any, api: API) {
   if (item.type !== "component") return undefined;
   const firstEntry = api.getData(item.children[0]) as { importPath?: string } | undefined;
   const [latestChange] =
-    (firstEntry?.importPath && data?.components[firstEntry.importPath]?.recentChanges) || [];
+    (firstEntry?.importPath && data?.[firstEntry.importPath]?.recentChanges) || [];
   if (!latestChange || daysSince(latestChange.date) > RECENTLY_CHANGED_DAYS) return undefined;
 
   const note = `Changed ${timeAgo(latestChange.date)}`;
@@ -65,7 +65,7 @@ function sidebarLabel(item: any, api: API) {
 function Panel() {
   const { storyId, index } = useStorybookState();
   const story = index?.[storyId] as { importPath: string; title: string } | undefined;
-  const component = story && data?.components[story.importPath];
+  const component = story && data?.[story.importPath];
 
   if (!story || !data || !component?.contributors.length) {
     return <Muted>No git history was found for this component.</Muted>;
@@ -171,21 +171,19 @@ function Lane({ changes }: { changes: Contributor["changes"] }) {
   return (
     <svg width={LANE_WIDTH} height="24" role="img" aria-label="Changes over the last 2 years">
       <rect x="0" y="11" width={LANE_WIDTH} height="2" fill="#e3e8ee" />
-      {changes.map((change) => {
-        return (
-          <rect
-            key={change.date}
-            x={(1 - daysSince(change.date) / LANE_DAYS) * (LANE_WIDTH - 4)}
-            y="5"
-            width="3"
-            height="14"
-            rx="1.5"
-            fill="#029cfd"
-          >
-            <title>{`${change.message} · ${formatDate(change.date)}`}</title>
-          </rect>
-        );
-      })}
+      {changes.map((change) => (
+        <rect
+          key={change.date}
+          x={(1 - daysSince(change.date) / LANE_DAYS) * (LANE_WIDTH - 4)}
+          y="5"
+          width="3"
+          height="14"
+          rx="1.5"
+          fill="#029cfd"
+        >
+          <title>{`${change.message} · ${formatDate(change.date)}`}</title>
+        </rect>
+      ))}
     </svg>
   );
 }

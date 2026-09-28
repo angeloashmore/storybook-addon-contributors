@@ -36,7 +36,7 @@ export const parameters = {
 
 function ContributorsBlock() {
   const { story } = useOf("story", ["story"]);
-  const component = readContributorsData()?.components[story.parameters.fileName];
+  const component = readContributorsData()?.[story.parameters.fileName];
   const contributors = component?.contributors.slice(0, 3);
   if (!component || !contributors?.length) return null;
 
