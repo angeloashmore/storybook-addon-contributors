@@ -2,7 +2,7 @@ import { execFileSync } from "node:child_process";
 import { buildIndex } from "storybook/internal/core-server";
 import { beforeAll, expect, it } from "vitest";
 
-import { collectContributors, type ContributorsData } from "../src/preset";
+import { collectContributors, componentPathspec, type ContributorsData } from "../src/preset";
 import { EXAMPLE_DIR, expectRanking, scenarios, storyImportPath } from "./shared";
 
 let entries: Record<string, any>;
@@ -17,7 +17,7 @@ beforeAll(async () => {
 });
 
 function rankedNames(contributorsData: ContributorsData, component: string): string[] {
-  return contributorsData.components[storyImportPath(component)].contributors.map(
+  return contributorsData[storyImportPath(component)].contributors.map(
     (contributor) => contributor.name,
   );
 }
@@ -26,9 +26,14 @@ it.each(scenarios)("$component ($scenario)", (scenario) => {
   expectRanking(rankedNames(data, scenario.component), scenario);
 });
 
-it("uses the component file from the story index", () => {
-  expect(data.components[storyImportPath("Button")].files).toEqual([
-    "fixture/src/Button/Button.tsx",
+it("uses the component file from the story index, or the story folder without story files", () => {
+  const button = Object.values(entries).find(
+    (entry) => entry.type === "story" && entry.importPath === storyImportPath("Button"),
+  );
+  expect(componentPathspec(button)).toEqual([`${EXAMPLE_DIR}fixture/src/Button/Button.tsx`]);
+  expect(componentPathspec({ ...button, componentPath: undefined })).toEqual([
+    `${EXAMPLE_DIR}fixture/src/Button`,
+    ":(exclude,glob)**/*.stories.*",
   ]);
 });
 
@@ -38,7 +43,6 @@ it("falls back to the story folder, excluding story files", () => {
   );
   const fallback = collectContributors(entriesWithoutComponentPath);
 
-  expect(fallback.components[storyImportPath("Button")].files).toEqual(["fixture/src/Button"]);
   for (const scenario of scenarios)
     expectRanking(rankedNames(fallback, scenario.component), scenario);
   expect(JSON.stringify(fallback)).not.toContain("Quinn Harper");
@@ -56,14 +60,14 @@ it("never includes email addresses", () => {
 });
 
 it("lists recent changes with pull request links", () => {
-  const [latest] = data.components[storyImportPath("Card")].recentChanges;
+  const [latest] = data[storyImportPath("Card")].recentChanges;
   expect(latest.author).toBe("Ben Okafor");
   expect(latest.message).not.toMatch(/\(#\d+\)/);
   expect(latest.url).toBe(`https://github.com/acme/design-system/pull/${latest.pullRequest}`);
 });
 
 it("marks people who are no longer active in the repository", () => {
-  const card = data.components[storyImportPath("Card")].contributors;
+  const card = data[storyImportPath("Card")].contributors;
   expect(
     card.find((contributor) => contributor.name === "Alice Chen")?.inactiveSince,
   ).toBeDefined();
@@ -73,7 +77,7 @@ it("marks people who are no longer active in the repository", () => {
 });
 
 it("counts changes per month", () => {
-  const { monthlyChanges } = data.components[storyImportPath("Card")];
+  const { monthlyChanges } = data[storyImportPath("Card")];
   expect(monthlyChanges).toHaveLength(12);
   expect(monthlyChanges.slice(-3).reduce((total, count) => total + count, 0)).toBe(3);
 });

@@ -1,6 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { dirname, relative, resolve } from "node:path";
+import { dirname, resolve } from "node:path";
 
 const HALF_LIFE_DAYS = 182;
 const ACTIVITY_WEIGHT = 0.7;
@@ -30,15 +30,12 @@ export type Contributor = {
 };
 
 export type ComponentContributors = {
-  files: string[];
   monthlyChanges: number[];
   recentChanges: Change[];
   contributors: Contributor[];
 };
 
-export type ContributorsData = {
-  components: Record<string, ComponentContributors>;
-};
+export type ContributorsData = Record<string, ComponentContributors>;
 
 type StoryIndexEntry = { type: string; importPath: string; componentPath?: string };
 
@@ -72,17 +69,17 @@ async function injectData(head = "", options: any): Promise<string> {
 
 export function collectContributors(entries: Record<string, StoryIndexEntry>): ContributorsData {
   const repositories = new Map<string, Repository>();
-  const components: ContributorsData["components"] = {};
+  const components: ContributorsData = {};
   for (const entry of Object.values(entries)) {
     if (entry.type !== "story" || components[entry.importPath]) continue;
     const pathspec = componentPathspec(entry);
     const repository = findRepository(dirname(pathspec[0]), repositories);
     components[entry.importPath] = describeComponent(pathspec, repository);
   }
-  return { components };
+  return components;
 }
 
-function componentPathspec(story: StoryIndexEntry): string[] {
+export function componentPathspec(story: StoryIndexEntry): string[] {
   if (story.componentPath) return [resolve(story.componentPath)];
   return [dirname(resolve(story.importPath)), ":(exclude,glob)**/*.stories.*"];
 }
@@ -117,7 +114,6 @@ function describeComponent(pathspec: string[], repository: Repository): Componen
   const commits = readCommits(pathspec);
 
   return {
-    files: [relative(process.cwd(), pathspec[0])],
     monthlyChanges: countChangesPerMonth(commits),
     recentChanges: commits
       .slice(0, RECENT_CHANGE_COUNT)
@@ -187,16 +183,13 @@ function rankContributors(
   repository: Repository,
 ): Contributor[] {
   const commitsByEmail = Map.groupBy(commits, (commit) => commit.email);
-  const activityByEmail = new Map(
-    [...commitsByEmail].map(([email, personCommits]) => [
-      email,
-      sum(
-        personCommits.map(
-          (commit) => recencyWeight(commit.time) * Math.log2(2 + commit.changedLines),
-        ),
-      ),
-    ]),
-  );
+  const activityByEmail = new Map<string, number>();
+  for (const [email, personCommits] of commitsByEmail) {
+    const weights = personCommits.map(
+      (commit) => recencyWeight(commit.time) * Math.log2(2 + commit.changedLines),
+    );
+    activityByEmail.set(email, sum(weights));
+  }
   const authoredLinesByEmail = countAuthoredLines(pathspec);
   const totalActivity = sum([...activityByEmail.values()]);
   const totalAuthoredLines = sum([...authoredLinesByEmail.values()]) || 1;
