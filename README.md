@@ -7,6 +7,8 @@ relevant first. Use it to find someone to ask a question, request a review from,
 from. You don't need git or any accounts: recent work counts most, and the list comes from your
 repository's history when Storybook is built.
 
+![The Contributors panel in Storybook, listing the people who worked on a Card component with their recent activity and changes](https://raw.githubusercontent.com/angeloashmore/storybook-addon-contributors/main/.github/screenshot-panel.jpg)
+
 You also get:
 
 - Recent changes, linked to their pull requests
@@ -14,7 +16,7 @@ You also get:
 - Which components changed in the last week, marked in the sidebar
 - The same people on the component's Docs page
 
-![The Contributors panel in Storybook, listing the people who worked on a Card component with their recent activity and changes](https://github.com/user-attachments/assets/db8abb95-227e-4b3a-8622-bc186e4eaa19)
+![A Card Docs page in Storybook with a block naming the people who worked on it and a link to the Contributors panel](https://raw.githubusercontent.com/angeloashmore/storybook-addon-contributors/main/.github/screenshot-docs.jpg)
 
 ## Install
 
