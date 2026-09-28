@@ -52,7 +52,7 @@ function ContributorsBlock() {
           </span>
         ))}
       </div>
-      <div>
+      <div style={{ flex: "1 1 160px", minWidth: 0 }}>
         <strong>{workedOnSentence(contributors.map((contributor) => contributor.name))}</strong>
         <div style={{ color: "#73808c", fontSize: 12, marginTop: 2 }}>
           Most recently {latestChange.author}, {timeAgo(latestChange.date)} · Changed {recentCount}{" "}
@@ -77,6 +77,7 @@ function workedOnSentence(names: string[]): string {
 
 const blockStyle = {
   display: "flex",
+  flexWrap: "wrap" as const,
   alignItems: "center",
   gap: 14,
   margin: "16px 0 24px",

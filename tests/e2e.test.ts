@@ -75,6 +75,28 @@ it("shows each change on hover and links to it", async () => {
   await page.close();
 });
 
+it("stacks the panel and docs block when there is little room", async () => {
+  const page = await browser.newPage({ viewport: { width: 1400, height: 900 } });
+  await page.goto(`http://localhost:${PORT}/?path=/story/scenarios-card--default`);
+  await page.getByRole("tab", { name: "Contributors" }).click();
+  await page.keyboard.press("Alt+D");
+
+  const name = (await page.getByTestId("contributor-name").first().boundingBox())!;
+  const lane = (await page
+    .getByRole("list", { name: /Changes over/ })
+    .first()
+    .boundingBox())!;
+  expect(lane.y).toBeGreaterThan(name.y + name.height);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(`http://localhost:${PORT}/iframe.html?id=scenarios-card--docs&viewMode=docs`);
+  const block = (await page.getByTestId("contributors-docs-block").boundingBox())!;
+  const button = (await page.getByRole("button", { name: /See people/ }).boundingBox())!;
+  expect(button.x + button.width).toBeLessThanOrEqual(block.x + block.width);
+
+  await page.close();
+});
+
 it("marks components changed in the last week in the sidebar", async () => {
   const page = await browser.newPage();
   await page.goto(`http://localhost:${PORT}/?path=/story/scenarios-card--default`);

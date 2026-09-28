@@ -122,7 +122,7 @@ function Activity({ monthlyChanges }: { monthlyChanges: number[] }) {
   const barWidth = 150 / monthlyChanges.length;
 
   return (
-    <div style={{ marginLeft: "auto", textAlign: "right" }}>
+    <ActivityBox>
       <svg width="150" height="28" aria-hidden>
         {monthlyChanges.map((count, month) => {
           const height = count === 0 ? 2 : 6 + (count / busiestMonth) * 22;
@@ -142,7 +142,7 @@ function Activity({ monthlyChanges }: { monthlyChanges: number[] }) {
       <Muted>
         Changed {recentCount} {recentCount === 1 ? "time" : "times"} in the last 3 months
       </Muted>
-    </div>
+    </ActivityBox>
   );
 }
 
@@ -186,7 +186,9 @@ function Lane({ changes }: { changes: Contributor["changes"] }) {
               href={change.url}
               target="_blank"
               rel="noreferrer"
-              style={{ left: (1 - daysSince(change.date) / LANE_DAYS) * (LANE_WIDTH - 13) }}
+              style={{
+                left: `calc(${laneProgress(change.date)}% - ${laneProgress(change.date) * 0.13}px)`,
+              }}
             />
           </TooltipProvider>
         );
@@ -195,15 +197,41 @@ function Lane({ changes }: { changes: Contributor["changes"] }) {
   );
 }
 
+function laneProgress(date: string): number {
+  return (1 - daysSince(date) / LANE_DAYS) * 100;
+}
+
+const NARROW = "@container (max-width: 720px)";
+const VERY_NARROW = "@container (max-width: 480px)";
+
 const Wrapper = styled.div(({ theme }) => ({
+  containerType: "inline-size",
   padding: "12px 16px",
   fontSize: theme.typography.size.s2,
   color: theme.color.defaultText,
 }));
 
-const Header = styled.div({ display: "flex", alignItems: "flex-start", gap: 16, marginBottom: 12 });
+const Header = styled.div({
+  display: "flex",
+  flexWrap: "wrap",
+  alignItems: "flex-start",
+  gap: 16,
+  marginBottom: 12,
+  [NARROW]: { gap: 8, marginBottom: 20 },
+});
 
-const Columns = styled.div({ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 24 });
+const ActivityBox = styled.div({
+  marginLeft: "auto",
+  textAlign: "right",
+  [NARROW]: { marginLeft: 0, textAlign: "left" },
+});
+
+const Columns = styled.div({
+  display: "grid",
+  gridTemplateColumns: "1.4fr 1fr",
+  gap: 24,
+  [NARROW]: { gridTemplateColumns: "1fr" },
+});
 
 const SectionTitle = styled.div(({ theme }) => ({
   fontSize: theme.typography.size.s1,
@@ -217,6 +245,7 @@ const SectionTitle = styled.div(({ theme }) => ({
 const Row = styled.div(({ theme }) => ({
   padding: "8px 0",
   borderBottom: `1px solid ${theme.appBorderColor}`,
+  [NARROW]: { padding: "6px 0", borderBottom: "none" },
 }));
 
 const PersonRow = styled(Row)({
@@ -224,6 +253,12 @@ const PersonRow = styled(Row)({
   gridTemplateColumns: `36px 1fr ${LANE_WIDTH}px`,
   alignItems: "center",
   gap: 12,
+  [VERY_NARROW]: {
+    gridTemplateColumns: "36px 1fr",
+    alignItems: "start",
+    rowGap: 2,
+    "& > :last-child": { gridColumn: 2 },
+  },
 });
 
 const LaneScale = styled.div(({ theme }) => ({
@@ -232,6 +267,7 @@ const LaneScale = styled.div(({ theme }) => ({
   width: LANE_WIDTH,
   marginLeft: "auto",
   paddingTop: 4,
+  [VERY_NARROW]: { width: "auto", marginLeft: 48 },
   fontSize: 10,
   color: theme.textMutedColor,
 }));
@@ -259,7 +295,7 @@ const Link = styled.a(({ theme }) => ({
 
 const LaneTrack = styled.div({
   position: "relative",
-  width: LANE_WIDTH,
+  width: "100%",
   height: 24,
   background: "linear-gradient(#e3e8ee, #e3e8ee) 0 11px / 100% 2px no-repeat",
 });
