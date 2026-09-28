@@ -60,6 +60,21 @@ it("shows recent changes and inactive people", async () => {
   await page.close();
 });
 
+it("shows each change on hover and links to it", async () => {
+  const page = await browser.newPage();
+  await page.goto(`http://localhost:${PORT}/?path=/story/scenarios-card--default`);
+  await page.getByRole("tab", { name: "Contributors" }).click();
+
+  const tick = page.getByTestId("lane-change").first();
+  await tick.hover();
+  const tooltip = page.getByRole("tooltip");
+  await tooltip.waitFor();
+  expect(await tooltip.textContent()).toBe(await tick.getAttribute("aria-label"));
+  expect(await tick.getAttribute("href")).toMatch(/^https:\/\/github\.com\/acme\/design-system\//);
+
+  await page.close();
+});
+
 it("marks components changed in the last week in the sidebar", async () => {
   const page = await browser.newPage();
   await page.goto(`http://localhost:${PORT}/?path=/story/scenarios-card--default`);

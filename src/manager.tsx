@@ -169,22 +169,29 @@ function Person({ contributor }: { contributor: Contributor }) {
 
 function Lane({ changes }: { changes: Contributor["changes"] }) {
   return (
-    <svg width={LANE_WIDTH} height="24" role="img" aria-label="Changes over the last 2 years">
-      <rect x="0" y="11" width={LANE_WIDTH} height="2" fill="#e3e8ee" />
-      {changes.map((change) => (
-        <rect
-          key={change.date}
-          x={(1 - daysSince(change.date) / LANE_DAYS) * (LANE_WIDTH - 4)}
-          y="5"
-          width="3"
-          height="14"
-          rx="1.5"
-          fill="#029cfd"
-        >
-          <title>{`${change.message} · ${formatDate(change.date)}`}</title>
-        </rect>
-      ))}
-    </svg>
+    <LaneTrack role="list" aria-label="Changes over the last 2 years">
+      {changes.map((change) => {
+        const link = change.pullRequest ? `#${change.pullRequest}` : "commit";
+        const note = `${change.message} · ${formatDate(change.date)} · ${link}`;
+        return (
+          <TooltipProvider
+            key={change.date}
+            tooltip={<TooltipNote note={note} maxWidth={320} />}
+            placement="top"
+          >
+            <Tick
+              role="listitem"
+              aria-label={note}
+              data-testid="lane-change"
+              href={change.url}
+              target="_blank"
+              rel="noreferrer"
+              style={{ left: (1 - daysSince(change.date) / LANE_DAYS) * (LANE_WIDTH - 9) }}
+            />
+          </TooltipProvider>
+        );
+      })}
+    </LaneTrack>
   );
 }
 
@@ -249,6 +256,31 @@ const Link = styled.a(({ theme }) => ({
   textDecoration: "none",
   fontWeight: "bold",
 }));
+
+const LaneTrack = styled.div({
+  position: "relative",
+  width: LANE_WIDTH,
+  height: 24,
+  background: "linear-gradient(#e3e8ee, #e3e8ee) 0 11px / 100% 2px no-repeat",
+});
+
+const Tick = styled.a({
+  position: "absolute",
+  top: 0,
+  width: 9,
+  height: 24,
+  "&::after": {
+    content: '""',
+    position: "absolute",
+    left: 3,
+    top: 5,
+    width: 3,
+    height: 14,
+    borderRadius: 1.5,
+    background: "#029cfd",
+  },
+  "&:hover::after, &:focus-visible::after": { background: "#0070c0", left: 2, width: 5 },
+});
 
 const ChangedDot = styled.span({
   width: 7,
